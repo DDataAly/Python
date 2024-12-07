@@ -1,2 +1,1 @@
-# Python
-This a template of the readme file which would contain all relevant information
+Depositary for all things Python. 
