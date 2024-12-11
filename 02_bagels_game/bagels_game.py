@@ -1,5 +1,5 @@
 import random
-# Set up the ruser_number_listes of the game
+# Set up the rules of the game
 def description():
     print("""Bagels, a deductive logic game.
 From Al Sweigart's Big book of small projects - My version of code.
