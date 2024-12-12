@@ -1,5 +1,9 @@
 import random
-
+# Describe the task
+def intro():
+    print('''Birthday Paradox Simulation, from Al Sweigart's Big Book of Small Projects.
+See readme.md for the task details. Code is written by me.''')
+    
 # Ask user to input the parameters of the probability calculation
 def experiment_parameters():
     n_experiments=int(input('Please enter the number of experiments: '))
@@ -45,17 +49,25 @@ def duplicates_checker(n_ppl):
     else:
         return(False)
 
+
+intro()
 # Calculating probability of two or more people in the group having birthday at the same day
 num_experiments, group_size = experiment_parameters()
 total_experiments=num_experiments
 match=0
+notification_counter=1
 while num_experiments>0:
     m=duplicates_checker(group_size)
     if m==True:
         match+=1
-    num_experiments-=1    
-print(f'''We run {total_experiments} for a group of {group_size}.
-The probability of at least two people having birthday at the same day in this group is {match/total_experiments}''')    
+    num_experiments-=1 
+    if (total_experiments - num_experiments)%100==0:
+        print(f'We run {notification_counter*100} experiments. Work in progress...')
+        notification_counter+=1
+
+print(f'''We run {total_experiments} experiments for a group of {group_size} people.
+There were {match} cases where at least two people in the group had a birthday at the same day.      
+The probability of at least two people having birthday at the same day in this group is {(match/total_experiments):.2%}''')    
 
  
     
