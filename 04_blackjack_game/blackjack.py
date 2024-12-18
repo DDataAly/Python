@@ -42,27 +42,78 @@ def blackjack_check(hand):
     return(is_blackjack)           
 
 # Get the number of players and generate a list with their ids
-def player_ids():
+def generate_player_ids():
     n=int(input('Please enter a number of players: '))
     player_ids = ["player" + str(i+1) for i in range(n)]
-    print(player_ids)
+    # print(player_ids)
     return(player_ids)
 
-# Create a class Player with the attributes player_id,player_hand,player_blackjack
-class Player:
-    def __init__(self, player_id):
+# Create a class GameParticipants with the attributes participant_hand,participant_is_blackjack
+class GameParticipants:
+    def __init__(self):
+        self.hand={}
+        self.is_blackjack=False
+
+# Create a subclass Player with an additional attribute player_id
+class Player(GameParticipants):
+    def __init__(self, hand, is_blackjack,player_id):
         self.player_id=player_id
-        self.player_hand={}
-        self.player_is_blackjack=False
+        super().__init__(hand, is_blackjack)
+
+
+# Create a subclass Dealer 
+class Dealer (GameParticipants):
+    pass
+    # def __init__(self):
+    #     self.dealer_hand={}
+    #     self.dealer_is_blackjacl=False
 
 # Create a list of players 
 def players_list():
-    player_ids=player_ids()
     players_list=[]
-    for player_id in player_ids:
+    for player_id in generate_player_ids():
         player=Player(player_id)
         players_list.append(player)
-    print(players_list)    
+    return(players_list)   
+
+# deck=full_deck()
+# dealer=Dealer()
+# players=players_list()
+# print(players)
+
+# Game set up
+deck=full_deck()
+dealer=Dealer()
+players=players_list()
+
+# First card distribution
+initial_rounds_number=2
+for round in (0, initial_rounds_number):
+    for player in players:
+        keys=list(player.player_hand.keys())
+        values=list(player.player_hand.values())
+        card_key,card_value,updated_deck=hit(deck)
+        keys.append(card_key)
+        values.append(card_value)
+        player.player_hand=dict(zip(keys,values))
+        deck=updated_deck
+        # print(f'This is {player.player_id} hand: {player.player_hand}')
+        # print(f'This is the deck after the first transaction {deck}.')
+    # 2print ("Done with players")
+    keys=list(dealer.dealer_hand.keys())    
+    values=list(dealer.dealer_hand.values())
+    card_key,card_value,updated_deck=hit(deck)
+    keys.append(card_key)
+    values.append(card_value)
+    dealer.dealer_hand=dict(zip(keys,values))
+    deck=updated_deck
+    # print(dealer.dealer_hand)
+    # print(deck)
+
+for player in players:
+    print(f'This is {player.player_id} hand: {player.player_hand}')
+print(f'This is dealer hand: {dealer.dealer_hand}')
+print(f'These are the cards still in the deck: {deck}')
 
 
 # d=full_deck()
@@ -99,6 +150,20 @@ def players_list():
 #     print(f"Updated deck: {d}")
 
 
+
+# player_ids=player_ids()
+# players=[]
+# for player_id in player_ids:
+#     player=Player(player_id)
+#     players.append(player)
+# print(players)
+
+# n=5
+# l=[]
+# for i in range (1,n+1):
+#     player_id='player'+str(i)
+#     l.append(player_id)
+# print(l)
 
 
 
