@@ -18,7 +18,7 @@ def full_deck():
     # print(f'This is a full deck {d}.')
     return(d)
 
-# Take a card from the deck (and remove it from the deck)
+# Take the card from the deck after shuffling (and remove it from the deck) - need to re-write as cards are shuffled only once!
 def hit(d):
     i=random.randrange(0, len(d))
     card_key=list(d.keys())[i]
@@ -49,24 +49,33 @@ def generate_player_ids():
     return(player_ids)
 
 # Create a class GameParticipants with the attributes participant_hand,participant_is_blackjack
+# Using custom constructor (__init__) to set up default values for all instances
 class GameParticipants:
-    def __init__(self):
-        self.hand={}
-        self.is_blackjack=False
+    def __init__(self, hand={}, is_blackjack=False):
+        self.hand=hand
+        self.is_blackjack=is_blackjack
+
+    def add_card_to_hand(self, deck):
+        keys=list(self.hand.keys())
+        values=list(self.hand.values())
+        card_key,card_value,updated_deck=hit(deck)
+        keys.append(card_key)
+        values.append(card_value)
+        self.hand=dict(zip(keys,values))
+        deck=updated_deck    
 
 # Create a subclass Player with an additional attribute player_id
+# Adding an extra instance variable player_id and use super() to call attributes and method of the parent class
 class Player(GameParticipants):
-    def __init__(self, hand, is_blackjack,player_id):
+    def __init__(self, player_id):
         self.player_id=player_id
-        super().__init__(hand, is_blackjack)
+        super().__init__()
 
 
-# Create a subclass Dealer 
+# Create a subclass Dealer which will have only one instance 
+# Doesn't have any extra attributes compared to the parent class
 class Dealer (GameParticipants):
     pass
-    # def __init__(self):
-    #     self.dealer_hand={}
-    #     self.dealer_is_blackjacl=False
 
 # Create a list of players 
 def players_list():
@@ -76,10 +85,6 @@ def players_list():
         players_list.append(player)
     return(players_list)   
 
-# deck=full_deck()
-# dealer=Dealer()
-# players=players_list()
-# print(players)
 
 # Game set up
 deck=full_deck()
@@ -87,32 +92,16 @@ dealer=Dealer()
 players=players_list()
 
 # First card distribution
-initial_rounds_number=2
-for round in (0, initial_rounds_number):
+num_initial_rounds=2
+for round in (1, num_initial_rounds+1):
     for player in players:
-        keys=list(player.player_hand.keys())
-        values=list(player.player_hand.values())
-        card_key,card_value,updated_deck=hit(deck)
-        keys.append(card_key)
-        values.append(card_value)
-        player.player_hand=dict(zip(keys,values))
-        deck=updated_deck
-        # print(f'This is {player.player_id} hand: {player.player_hand}')
-        # print(f'This is the deck after the first transaction {deck}.')
-    # 2print ("Done with players")
-    keys=list(dealer.dealer_hand.keys())    
-    values=list(dealer.dealer_hand.values())
-    card_key,card_value,updated_deck=hit(deck)
-    keys.append(card_key)
-    values.append(card_value)
-    dealer.dealer_hand=dict(zip(keys,values))
-    deck=updated_deck
-    # print(dealer.dealer_hand)
-    # print(deck)
+        player.add_card_to_hand(deck)
+    dealer.add_card_to_hand(deck)
+      
 
 for player in players:
-    print(f'This is {player.player_id} hand: {player.player_hand}')
-print(f'This is dealer hand: {dealer.dealer_hand}')
+    print(f'This is {player.player_id} hand: {player.hand}')
+print(f'This is dealer hand: {dealer.hand}')
 print(f'These are the cards still in the deck: {deck}')
 
 
