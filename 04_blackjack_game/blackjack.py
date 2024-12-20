@@ -1,29 +1,41 @@
 import random 
 import re
 
-# Create a deck with 52 cards. The default initial value of Ace is 11
-def full_deck():
+# Create a list of cards and their values. The default initial value of Ace is 11
+def cards_generation():
     basic_keys=['Ace', '2', '3', '4', '5', '6', '7', '8','9', '10', 'King', 'Queen', 'Jack']
     suit_values=[11,2,3,4,5,6,7,8,9,10,10,10,10]
-    suits=['Hearts', 'Clubs', 'Spikes', 'Dimonds']
+    suits=['Hearts', 'Clubs', 'Spikes', 'Diamonds']
     full_keys=[]
     for suit in suits:
         for basic_key in basic_keys:
             full_keys.append(suit+' '+basic_key)
     full_values=suit_values*4
+    return(full_keys, full_values)
 
+def deck_generation(keys, values):
     d={}
-    for i in range (0, len(full_keys)):
-        d.update({full_keys[i]:full_values[i]})
-    # print(f'This is a full deck {d}.')
+    for i in range (0, len(keys)):
+        d.update({keys[i]:values[i]})
     return(d)
 
-# Take the card from the deck after shuffling (and remove it from the deck) - need to re-write as cards are shuffled only once!
+def cards_shuffle(d):
+    keys=list(d.keys())
+    random.shuffle(keys) 
+    values=[]
+    for key in keys:
+        value=d[key]
+        values.append(value)
+    return(keys, values)
+
+    
+# Take the top card from the deck (and remove it from the deck) 
 def hit(d):
-    i=random.randrange(0, len(d))
-    card_key=list(d.keys())[i]
+    keys=list(d.keys())
+    card_key=keys.pop()
     card_value=d[card_key]
-    d.pop(card_key)
+    # Removing the card from the deck
+    d.pop(card_key) 
     return(card_key,card_value,d)
 
 # Check if two initially distributed cards form a blackjack
@@ -86,8 +98,19 @@ def players_list():
     return(players_list)   
 
 
-# Game set up
-deck=full_deck()
+# Game set up (cards are shuffled only once in the beginning of the game)
+deck=deck_generation(cards_generation()[0], cards_generation()[1])
+print (f'This is the deck of 52 cards:\n {deck}')
+print('Let\'s re-shuffle it')
+# Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
+# If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
+# This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
+# Naturally keys and card values wouldn't match 
+shuffled_keys, shuffled_values=cards_shuffle(deck)
+deck=deck_generation(shuffled_keys, shuffled_values)
+print(f'This is the shuffled deck of 52 cards: \n {deck}')
+
+
 dealer=Dealer()
 players=players_list()
 
@@ -103,64 +126,11 @@ for player in players:
     print(f'This is {player.player_id} hand: {player.hand}')
 print(f'This is dealer hand: {dealer.hand}')
 print(f'These are the cards still in the deck: {deck}')
-
-
-# d=full_deck()
-# for player in players_list:
-#     card_key, card_value, d= hit(d)
-#     player.player_hand 
-# print(d)
-# card_key2, card_value2, d= hit(d)
-# print(d)
-# hand ={card_key1:card_value1, card_key2:card_value2}
-# print(hand)
-# blackjack=blackjack_check(hand)
-# print(blackjack)
-
-
-# d=full_deck()
-# for player in players_list:
-#     card_key, card_value, d= hit(d)
-# print(d)
-# card_key2, card_value2, d= hit(d)
-# print(d)
-# hand ={card_key1:card_value1, card_key2:card_value2}
-# print(hand)
-# blackjack=blackjack_check(hand)
-# print(blackjack)
+print(f'There are {len(deck)} cards left in the deck')
 
 
 
-
-# d=full_deck()
-# for i in range(0,3):
-#     card_key, card_value,d=hit(d)
-#     print(card_key, card_value)
-#     print(f"Updated deck: {d}")
-
-
-
-# player_ids=player_ids()
-# players=[]
-# for player_id in player_ids:
-#     player=Player(player_id)
-#     players.append(player)
-# print(players)
-
-# n=5
-# l=[]
-# for i in range (1,n+1):
-#     player_id='player'+str(i)
-#     l.append(player_id)
-# print(l)
-
-
-
-
-
-
-
-    
+   
 
 
 # hand={}
