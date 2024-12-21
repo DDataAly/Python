@@ -40,18 +40,33 @@ def hit(d):
 
 # Check if two initially distributed cards form a blackjack
 def blackjack_check(hand):
-    is_blackjack='False'
+    is_blackjack=False
     for item in hand.keys():
         if re.search('Ace',item)==None:
             continue
         else:
-            print('There is an Ace in the hand. Checking the second card...')
-            print(f'The sum of two cards is equal {sum(hand.values())}')
+            #print('There is an Ace in the hand. Checking the second card...')
+            #print(f'The sum of two cards is equal {sum(hand.values())}')
             if sum(hand.values())==21:
                 is_blackjack=True
-                print('Wohoo! This is a blackjack')
+                #print('Wohoo! This is a blackjack')
                 break
-    return(is_blackjack)           
+    return(is_blackjack)   
+
+# Check whether a player and/or the dealer have a blackjack
+def blackjack_winners(pbj, dbj):
+    if dbj==False:
+        if pbj==False:
+            pass
+        else:
+            player.player_status="Blackjack winner"
+    if dbj==True:
+            if pbj==True:
+                player.player_status="Tie"
+            else:
+                player.player_status="Looser" 
+    return(player.player_status)
+      
 
 # Get the number of players and generate a list with their ids
 def generate_player_ids():
@@ -76,11 +91,15 @@ class GameParticipants:
         self.hand=dict(zip(keys,values))
         deck=updated_deck    
 
+
+
 # Create a subclass Player with an additional attribute player_id
 # Adding an extra instance variable player_id and use super() to call attributes and method of the parent class
 class Player(GameParticipants):
-    def __init__(self, player_id):
+    def __init__(self, player_id, player_bet, player_status='Still playing'):
         self.player_id=player_id
+        self.player_bet=player_bet
+        self.player_status=player_status
         super().__init__()
 
 
@@ -93,22 +112,22 @@ class Dealer (GameParticipants):
 def players_list():
     players_list=[]
     for player_id in generate_player_ids():
-        player=Player(player_id)
+        player=Player(player_id, player_bet=20) #need to change this to reflect various bets
         players_list.append(player)
     return(players_list)   
 
 
 # Game set up (cards are shuffled only once in the beginning of the game)
 deck=deck_generation(cards_generation()[0], cards_generation()[1])
-print (f'This is the deck of 52 cards:\n {deck}')
-print('Let\'s re-shuffle it')
+# print (f'This is the deck of 52 cards:\n {deck}')
+# print('Let\'s re-shuffle it')
 # Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
 # If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
 # This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
 # Naturally keys and card values wouldn't match 
 shuffled_keys, shuffled_values=cards_shuffle(deck)
 deck=deck_generation(shuffled_keys, shuffled_values)
-print(f'This is the shuffled deck of 52 cards: \n {deck}')
+# print(f'This is the shuffled deck of 52 cards: \n {deck}')
 
 
 dealer=Dealer()
@@ -120,17 +139,51 @@ for round in (1, num_initial_rounds+1):
     for player in players:
         player.add_card_to_hand(deck)
     dealer.add_card_to_hand(deck)
-      
+
+# Blackjack check
+for player in players:
+    player.is_blackjack=blackjack_check(player.hand)
+dealer.is_blackjack=blackjack_check(dealer.hand)
 
 for player in players:
-    print(f'This is {player.player_id} hand: {player.hand}')
-print(f'This is dealer hand: {dealer.hand}')
-print(f'These are the cards still in the deck: {deck}')
-print(f'There are {len(deck)} cards left in the deck')
+    print(f'This is {player.player_id} hand: {player.hand} {"Wohoo, it\'s a blackjack!" if player.is_blackjack==True else ""}')
+# print(f'This is dealer hand: {dealer.hand}')
+print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')
+if dealer.is_blackjack==True:
+    print(f'The dealer has checked and he has a blackjack. This is the dealer\'s hand: {dealer.hand}')
+# print(f'These are the cards still in the deck: {deck}')
+# print(f'There are {len(deck)} cards left in the deck')
+
+
+for player in players:
+    player.player_status=blackjack_winners(player.is_blackjack,dealer.is_blackjack)  
+    print(player.player_id, player.player_status)
 
 
 
-   
+
+
+
+# for player in players:
+#     pbj=player.is_blackjack
+#     dbj=dealer.is_blackjack
+#     print(pbj,dbj)
+#     if dbj==False:
+#         if pbj==False:
+#             print('BAU')
+#             pass
+#         else:
+#             player.player_status="Blackjack winner"
+#             print('BJ winner')
+#     if dbj==True:
+#             if pbj==True:
+#                 player.player_status="Tie"
+#                 print('BJ tie')
+#             else:
+#                 player.player_status="Looser" 
+#                 print('BJ Looser')      
+#     print(player.player_status)
+
 
 
 # hand={}
