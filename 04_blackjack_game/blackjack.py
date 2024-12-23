@@ -89,16 +89,18 @@ class GameParticipants:
         keys.append(card_key)
         values.append(card_value)
         self.hand=dict(zip(keys,values))
-        deck=updated_deck    
+        deck=updated_deck 
+        return(self.hand,deck)   
 
 
 
 # Create a subclass Player with an additional attribute player_id
 # Adding an extra instance variable player_id and use super() to call attributes and method of the parent class
 class Player(GameParticipants):
-    def __init__(self, player_id, player_bet, player_status='Still playing'):
+    def __init__(self, player_id, player_bet, player_chips_value, player_status='Still playing'):
         self.player_id=player_id
         self.player_bet=player_bet
+        self.player_chips_value=player_chips_value
         self.player_status=player_status
         super().__init__()
 
@@ -108,19 +110,45 @@ class Player(GameParticipants):
 class Dealer (GameParticipants):
     pass
 
+def initial_round_results(player):
+    #print(player.player_id, player.player_status)
+    if player.player_status == 'Blackjack winner':
+        print(f'{player.player_id} has won {1.5*player.player_bet} and finished the game')
+        player.player_chips_value+=1.5*player.player_bet
+        print(f'{player.player_id} has {player.player_chips_value} of chips now')
+    elif player.player_status == 'Tie':
+        print(f'{player.player_id} keeps his bet')
+    elif player.player_status=='Looser':
+        print(f'{player.player_id} lost his bet')    
+        player.player_chips_value-=player.player_bet
+        print(f'{player.player_id} has {player.player_chips_value} of chips now')
+    return(player)
+
+def players_list_update(players):
+    num_of_players=len(players.copy())
+    players=[player for player in players if player.player_status=='Still playing']
+    num_of_players_updated=len(players)
+    if num_of_players!=num_of_players_updated:
+        print('This is an updated list of players: ')
+        for player in players:
+            print(player.player_id)
+    else:
+        print('All players continue the game')
+    return(players)
+
 # Create a list of players 
 def players_list():
     players_list=[]
     for player_id in generate_player_ids():
-        player=Player(player_id, player_bet=20) #need to change this to reflect various bets
+        player=Player(player_id, player_chips_value=100, player_bet=20) #need to change this to reflect various bets and number of chips
         players_list.append(player)
     return(players_list)   
 
 
+dealer=Dealer()
+players=players_list()
 # Game set up (cards are shuffled only once in the beginning of the game)
 deck=deck_generation(cards_generation()[0], cards_generation()[1])
-# print (f'This is the deck of 52 cards:\n {deck}')
-# print('Let\'s re-shuffle it')
 # Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
 # If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
 # This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
@@ -130,8 +158,7 @@ deck=deck_generation(shuffled_keys, shuffled_values)
 # print(f'This is the shuffled deck of 52 cards: \n {deck}')
 
 
-dealer=Dealer()
-players=players_list()
+                                                                                                                                                                                                                                                                                                
 
 # First card distribution
 num_initial_rounds=2
@@ -151,68 +178,48 @@ for player in players:
 print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')
 if dealer.is_blackjack==True:
     print(f'The dealer has checked and he has a blackjack. This is the dealer\'s hand: {dealer.hand}')
+    print('The game is over for all players. These are the game results: ')
 # print(f'These are the cards still in the deck: {deck}')
 # print(f'There are {len(deck)} cards left in the deck')
 
-
 for player in players:
-    player.player_status=blackjack_winners(player.is_blackjack,dealer.is_blackjack)  
-    print(player.player_id, player.player_status)
+    player.player_status=blackjack_winners(player.is_blackjack,dealer.is_blackjack) 
+    initial_round_results(player)
+
+if dealer.is_blackjack==False:
+    players=players_list_update(players)
+
+print('''This is the list of available actions:
+    Stand - do nothing, pass the turn to the next player
+    Hit - take a card
+    Double - increase your bet up to 2X
+    Split - available only if the player has two cards of the same value
+    Surrender - end the game immediately and keep half of the bet''')
+
+for player in players:    
+    bust=False
+    while not bust:
+        next_move=input('Please enter h if you\'d like to hit or s if you prefer to stand: ')
+        if next_move=='h':
+            player.hand, deck=player.add_card_to_hand(deck)
+            print(player.hand)
+            bust=True
+            print(bust)
 
 
+    
 
 
-
-
-# for player in players:
-#     pbj=player.is_blackjack
-#     dbj=dealer.is_blackjack
-#     print(pbj,dbj)
-#     if dbj==False:
-#         if pbj==False:
-#             print('BAU')
-#             pass
-#         else:
-#             player.player_status="Blackjack winner"
-#             print('BJ winner')
-#     if dbj==True:
-#             if pbj==True:
-#                 player.player_status="Tie"
-#                 print('BJ tie')
-#             else:
-#                 player.player_status="Looser" 
-#                 print('BJ Looser')      
-#     print(player.player_status)
-
-
-
-# hand={}
-# hand_keys=list(hand.keys())
-# hand_values=list(hand.values())
-# while sum(hand_values)<21:
-#     print("I took a new card")
-#     top_up_key, top_up_value=hit()
-#     print(top_up_key, top_up_value)
-#     hand_keys.append(top_up_key)
-#     hand_values.append(top_up_value)
-#     print(f'The current total on hand is {sum(hand_values)}.')
-#     hand_total(hand_keys, hand_values)
-# print(hand_keys)
-# print(hand_values)
-
-
-
-# def hand_top_up(hand,hit):
-#     card=hit()
-#     hand.update(card)
-#     print(hand)
-#     return(hand)   
+ 
 
 # def bust_checker(hand):
-#     hand_keys=hand.keys()
+#     hand_keys=list(hand.keys())
 #     hand_values=hand.values()
 #     print(f'The sum of hand is {sum(hand_values)}')
-#     while sum(hand_values)<=21:
-#         print('cats')
-#         hand_top_up
+#     if sum(hand_values)<=21:
+#         pass
+# all_keys=''+join(list(hand.keys()))
+# if len(re.findall)
+
+
 
