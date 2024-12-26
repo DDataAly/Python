@@ -62,15 +62,51 @@ class Player(GameParticipants):
         self.chips_value=chips_value
         super().__init__()
     
-    def hand_analyser(self,hand,status):
+    def player_hand_analyser(self,hand,status):
         hand_keys=list(self.hand.keys())
         hand_values=list(self.hand.values())
         if sum(hand_values)==21:
-            status='Winner'
+            self.status='21 Winner'
         if sum(hand_values)<21:
             pass
         else:
-            num_aces= len(re.findall('Ace' in ''.join(hand.keys())))
+            num_aces= len(re.findall('Ace',''.join(hand.keys())))
+            if num_aces!=0:
+                print(f'There are {num_aces} in this hand')
+            if num_aces==0:
+                self.status='Lost'
+            else:
+                hand_sum=sum(hand_values)
+                print(f'The sum of this hand is {hand_sum}')
+                for i in range(0,num_aces):
+                    hand_sum-=10
+                    print(f'This is the ace corrected sum of hand {hand_sum}')
+                    if hand_sum==21:
+                        self.status='21 Winner'
+                    if hand_sum<21:
+                        pass
+                        break
+                    else:
+                        continue
+                print(self.status)
+        return(status)
+#endregion
+#region - Creating a subclass dealer
+# Create a subclass Dealer which will have only one instance 
+# Doesn't have any extra attributes compared to the parent class
+class Dealer (GameParticipants):
+
+    def dealer_hand_analyser(self,hand,status):
+        hand_keys=list(self.hand.keys())
+        hand_values=list(self.hand.values())
+        if sum(hand_values)<17:
+            pass
+        elif sum(hand_values)<21:
+            self.status='Standing'
+        elif sum(hand_values)==21:
+            status='21 Winner'
+        else:
+            num_aces= len(re.findall('Ace',''.join(hand.keys())))
             if num_aces==0:
                 status='Lost'
             else:
@@ -78,19 +114,13 @@ class Player(GameParticipants):
                 for i in range(0,num_aces):
                     hand_sum-=10
                     if hand_sum==21:
-                        status='Winner'
+                        status='21 Winner'
                     if hand_sum<21:
-                        pass
                         break
                     else:
                         continue
         return(status)
-#endregion
-#region - Creating a subclass dealer
-# Create a subclass Dealer which will have only one instance 
-# Doesn't have any extra attributes compared to the parent class
-class Dealer (GameParticipants):
-    pass
+    
 #endregion
 #region - Functions for generating the list of players and removing players who won/lost from it
 # Get the number of players and generate a list with their ids
@@ -111,14 +141,15 @@ def create_players_list():
 #Remove players who have won or lost from the list of players
 def players_list_update(players):
     num_of_players=len(players.copy())
-    players=[player for player in players if player.status=='Active']
+    players=[player for player in players if (player.status=='Active' or player.status=='Standing')]
     num_of_players_updated=len(players)
     if num_of_players!=num_of_players_updated:
-        print('This is an updated list of players: ')
+        print('This is the list of players still in the game: ')
         for player in players:
-            print(player.id)
+            print(player.id, end= ' ')
     else:
         print('All players continue the game')
+    print('\n')    
     return(players)
 #endregion
 #region - Functions for processing a blackjack
@@ -188,7 +219,35 @@ if dealer.status=='Blackjack':
 else:
     for player in players:
         player_blackjack_results(player)
-    players_list_update(players)    
+    players=players_list_update(players)    
+
+#Main game
+print('The main game is starting')
+for player in players:
+    print(f'Player {player.id} is playing')
+    print(f'Player hand: {player.hand}')
+    while player.status=='Active':
+        player_move=input('Please choose your action, hit or stand: ')
+        if player_move.strip() =='stand':
+            player.status='Standing'
+        else:
+            player.add_card_to_hand(deck)
+            print(player.hand)
+            player.status=player.player_hand_analyser(player.hand, player.status)
+            if player.status=='Lost':
+                print(f'The {player.id} has bust')
+players_list_update(players)  
+
+print('The dealer is playing')
+
+# while dealer.status=='Active':
+#     dealer.add_card_to_hand(deck)
+#     print(dealer.hand)
+#     dealer.status=dealer.dealer_hand_analyser(dealer.hand,dealer.status)
+#     if dealer.status=='Lost':
+#         print(f'The dealer has bust')
+#     if dealer.status=='Standing':
+#         print('The dealer has hit 17 and ready to compare his hands to the players hands.')
 
 
         
