@@ -45,23 +45,36 @@ class GameParticipants:
         self.hand=dict(zip(keys,values))
         deck=updated_deck 
         return(self.hand,deck) 
-    
-    # test code -remove at the final version
-    def test_add_card_to_hand(self, deck):
-        keys=list(self.hand.keys())
-        values=list(self.hand.values())
-        card_key=input('Enter card key: ')
-        card_value=int(input ('Enter card value: '))
-        keys.append(card_key)
-        values.append(card_value)
-        self.hand=dict(zip(keys,values))
-        return(self.hand) 
-    
-    def blackjack_check(self, hand, status):
+       
+    def blackjack_check(self, hand):
         hand_values=list(hand.values())
-        if sum(hand_values)==21 and len(hand_values)==2:
-            self.status='Blackjack'
+        if sum(hand_values)==21: #and len(hand_values)==2:
+            self.status='Blackjack'  
         return(self.status)
+    
+    def hand_sum_with_ace_check(self, hand):
+        hand_sum=sum(list(self.hand.values()))
+        num_aces= len(re.findall('Ace',''.join(hand.keys())))
+        if num_aces==0:
+                #print('Since there are no aces, it\'s a bust')
+            self.status='Lost'
+        else:
+            print(f'There is(are) {num_aces} ace(s) in this hand')
+            for i in range(0,num_aces):
+                hand_sum-=10
+                if hand_sum==21:
+                    self.status='21 Winner'
+                    print('The sum is 21, you\'re a winner!')
+                    break
+                if hand_sum<21:
+                    break
+                else:
+                    continue
+            if hand_sum>21:
+                self.status='Lost'
+            print(f'This is the ace-adjusted sum of the hand {hand_sum}')
+        return(self.status, hand_sum)
+    
 #endregion
 #region - Creating a subclass players
 # Create a subclass Player with an additional attributes id, bet, chips_value
@@ -73,6 +86,22 @@ class Player(GameParticipants):
         self.chips_value=chips_value
         super().__init__()
     
+    def player_main_game(self,id,hand,status,deck):
+        print(f'Player {self.id} is playing')
+        print(f'Player hand: {self.hand}')
+        while self.status=='Active':
+            player_move=input('Please choose your action, hit or stand: ')
+            if player_move.strip() =='stand':
+                self.status='Standing'
+            else:
+                self.add_card_to_hand(deck)
+                print(self.hand)
+                self.status, hand_sum=self.player_hand_analyser(self.hand)
+                if self.status=='Lost':
+                    print(f'The hand sum is {hand_sum}')
+                    print(f'The {self.id} has bust')
+        return(self.status)
+
     def player_hand_analyser(self,hand):
         #hand_values=list(self.hand.values())
         hand_sum=sum(list(self.hand.values()))
@@ -84,27 +113,7 @@ class Player(GameParticipants):
             #print('The sum is less than 21')
             pass
         else:
-            #print('The sum is more than 21')
-            num_aces= len(re.findall('Ace',''.join(hand.keys())))
-            if num_aces==0:
-                #print('Since there are no aces, it\'s a bust')
-                self.status='Lost'
-            else:
-                print(f'There is(are) {num_aces} ace(s) in this hand')
-                for i in range(0,num_aces):
-                    hand_sum-=10
-                    if hand_sum==21:
-                        self.status='21 Winner'
-                        print('The sum is 21, you\'re a winner!')
-                        break
-                    if hand_sum<21:
-                        break
-                    else:
-                        continue
-                if hand_sum>21:
-                    self.status='Lost'
-                print(f'This is the ace-adjusted sum of the hand {hand_sum}')
-        #print(self.status)
+            self.status, hand_sum=self.hand_sum_with_ace_check(hand)
         return(self.status, hand_sum)
 #endregion
 #region - Creating a subclass dealer
@@ -114,38 +123,46 @@ class Dealer (GameParticipants):
 
     def dealer_hand_analyser(self,hand):
         hand_sum=sum(list(self.hand.values()))
-        print(f'The function thinks that the dealer hand has sum of {hand_sum}')
+        print(f'The dealer hand has sum of {hand_sum}')
         if hand_sum<17:
-            print("Less than 17 condition")
+            #print("Less than 17 condition")
             pass
         elif hand_sum<21:
-            print('Less than 21 condition')
+            #print('Less than 21 condition')
             self.status='Standing'
         elif hand_sum==21:
-            print('21 winner condition')
+            #print('21 winner condition')
             self.status='21 Winner'
         else:
-            print('We\'re on ace evaluation now')
-            num_aces= len(re.findall('Ace',''.join(hand.keys())))
-            if num_aces==0:
-                self.status='Lost'
-            else:
-                print(f'There is(are) {num_aces} ace(s) in this hand')
-                for i in range(0,num_aces):
-                    hand_sum-=10
-                    if hand_sum==21:
-                        self.status='21 Winner'
-                        print('21 winner condition')
-                        break
-                    if hand_sum<21:
-                        break
-                    else:
-                        continue
-                if hand_sum>21:
-                    self.status='Lost'
-                print(f'This is the ace-adjusted sum of the hand {hand_sum}')
+            self.status, hand_sum=self.hand_sum_with_ace_check(hand)
         return(self.status)
     
+    def dealer_hole_check (self, hand):
+        hand_values=list(hand.values()) 
+        if sum(hand_values)==21:
+            pass
+        else:
+            for value in hand_values:
+                if value in [10,11]:
+                    self.status='No blackjack'
+                else:
+                    continue                
+        return(self.status)
+
+    def dealer_main_game(self,hand,status,deck):
+        print('The dealer is playing')
+        print(f'This is the dealer hand: {self.hand}')
+        if sum(list(self.hand.values()))>=17:
+            self.status='Standing'
+            print('I\'m standing still as I already have 17 in my hand')
+        else:
+            print('The dealer has to take cards from the deck until he hits 17 or more')
+            while self.status=='Active':
+                self.add_card_to_hand(deck)
+                print(f'The dealer took a card. His updated hand is {self.hand}')
+                self.status=self.dealer_hand_analyser(self.hand)
+            #print(self.status)
+        return(self.status)
 #endregion
 #region - Functions for generating the list of players and removing players who won/lost from it
 # Get the number of players and generate a list with their ids
@@ -166,8 +183,10 @@ def create_players_list():
 #Remove players who have won or lost from the list of players
 def players_list_update(players):
     num_of_players=len(players.copy())
-    players=[player for player in players if (player.status=='Active' or player.status=='Standing' or player.status=='21 Winner')]
+    print(f'Initial number of players is {num_of_players}')
+    players=[player for player in players if player.status in ['Active','Standing','21 Winner']]
     num_of_players_updated=len(players)
+    print(f'Current number of players is {num_of_players_updated}')
     if num_of_players_updated==0:
         print('The game is over for all participants')
     elif num_of_players!=num_of_players_updated:
@@ -206,17 +225,35 @@ def hit(d):
     d.pop(card_key) 
     return(card_key,card_value,d)
 
+# Calculate the game results
+def game_results(dealer, players): 
+    if dealer.status=='Lost':
+        print(f'Since dealer has bust, the following participants won the game: ')
+        for player in players:
+            print(player.id)
+    else:
+        print(f'Calculating the game results for remaining players')    
+        for player in players:
+            player.status, sum_hand = player.player_hand_analyser(player.hand)
+            if sum_hand<sum(list(dealer.hand.values())):
+                player.status='Lost'
+                print(f'{player.id} has lost the game')
+            elif sum_hand>sum(list(dealer.hand.values())):
+                player.status='21 Winner'
+                print(f'{player.id} has won the game')
+            else:
+                print(f'{player.id} has a tie with the dealer')
+
+
 dealer=Dealer()
 players=create_players_list()
 # Game set up (cards are shuffled only once in the beginning of the game)
 deck=deck_generation(cards_generation()[0], cards_generation()[1])
-# Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
+# Since we use random.shuffle in cards_shuffle we need to make sure that we call cards_shuffle function only once 
 # If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
 # This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
-# Naturally keys and card values wouldn't match 
 shuffled_keys, shuffled_values=cards_shuffle(deck)
 deck=deck_generation(shuffled_keys, shuffled_values)
-# print(f'This is the shuffled deck of 52 cards: \n {deck}')
                                                                                                                                                                                                                                                                                                
 # First card distribution
 num_initial_rounds=2
@@ -225,80 +262,58 @@ for round in (1, num_initial_rounds+1):
         player.add_card_to_hand(deck)
     dealer.add_card_to_hand(deck)
 
-#Print statement to display initial hands for players and  upcard of the dealer
+#Print statement to display initial hands for players and the upcard of the dealer
 for player in players:
     print(f'This is the hand of the {player.id}: {player.hand}')
 print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')    
  
 #Blackjack analysing
 for player in players:
-    player.status=player.blackjack_check(player.hand, player.status)
-dealer.status=dealer.blackjack_check(dealer.hand, dealer.status)
+    player.status=player.blackjack_check(player.hand)
+dealer.status=dealer.blackjack_check(dealer.hand)
+print(f'Initial dealer status is {dealer.status}')
+dealer.status=dealer.dealer_hole_check(dealer.hand)
+print(f'Dealer status after holing is {dealer.status}')
 
 if dealer.status=='Blackjack':
-    print(f'The dealer has checked his second card, and he has a blackjack. Dealer hand is {dealer.hand} ')
+    print(f'The dealer has checked his second card, and he has a blackjack. Dealer\'s hand is {dealer.hand} ')
     for player in players:
         dealer_blackjack_results(player,dealer)
     print('The game has ended')
-else:
+else: 
+    if dealer.status=='No blackjack':
+        print('The dealer has checked and he doesn\'t have a blackjack')    
     for player in players:
         player_blackjack_results(player)
     players=players_list_update(players)    
 
-#Main game
+#Main game - goes ahead if the dealer doesn't have a blackjack
 if dealer.status!='Blackjack':
     print('The main game is starting\n')
     for player in players:
-        print(f'Player {player.id} is playing')
-        print(f'Player hand: {player.hand}')
-        while player.status=='Active':
-            player_move=input('Please choose your action, hit or stand: ')
-            if player_move.strip() =='stand':
-                player.status='Standing'
-            else:
-                player.add_card_to_hand(deck)
-                print(player.hand)
-                player.status, hand_sum=player.player_hand_analyser(player.hand)
-                #print(f'Here is another status {player.status}')
-                if player.status=='Lost':
-                    print(f'The hand sum is {hand_sum}')
-                    print(f'The {player.id} has bust')
-            #print(f'And final status here {player.status}')
+        player.status=player.player_main_game(player.id,player.hand,player.status,deck)
         print('\n')
     players=players_list_update(players)  
 
+# If there is at least one player who didn't bust the dealer plays
     if len(players)!=0:
-        print('The dealer is playing')
-        print(f'This is the dealer hand: {dealer.hand}')
-        if sum(list(dealer.hand.values()))>=17:
-            dealer.status='Standing'
-            print('I\'m standing still as I already have 17 in my hand')
-        else:
-            print('The dealer has to take cards from the deck untill he hits 17 or more')
-            while dealer.status=='Active':
-                dealer.add_card_to_hand(deck)
-                print(f'The dealer took a card. His updated hand is {dealer.hand}')
-                #dealer.test_add_card_to_hand(deck)
-                dealer.status=dealer.dealer_hand_analyser(dealer.hand)
-                #print(f'This is the dealer\'s hand with a new card: {dealer.hand}')
-            print(dealer.status)
+        dealer.status=dealer.dealer_main_game(dealer.hand,dealer.status,deck)
 
-        if dealer.status=='Lost':
-            print(f'Since dealer has bust, the following participants won the game: ')
-            for player in players:
-                print(player.id)
-        else:
-            print(f'Calculating the game results for remaining players')    
-            # We need to use hand_sum not sum(hand.values()) here as the latter doesn't take ace value into account  
-            for player in players:
-                if sum(list(player.hand.values()))<sum(list(dealer.hand.values())):
-                    player.status='Lost'
-                    print(f'{player.id} has lost the game')
-                elif sum(list(player.hand.values()))>sum(list(dealer.hand.values())):
-                    player.status='21 Winner'
-                    print(f'{player.id} has won the game')
-                else:
-                    print(f'{player.id} has a tie with the dealer')
+# Game results calculation
+    game_results(dealer, players)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # while dealer.status=='Active':
