@@ -5,7 +5,7 @@ import re
 def cards_generation():
     basic_keys=['Ace', '2', '3', '4', '5', '6', '7', '8','9', '10', 'King', 'Queen', 'Jack']
     suit_values=[11,2,3,4,5,6,7,8,9,10,10,10,10]
-    suits=['Hearts', 'Clubs', 'Spikes', 'Diamonds']
+    suits=['Hearts', 'Clubs', 'Spades', 'Diamonds']
     full_keys=[]
     for suit in suits:
         for basic_key in basic_keys:
@@ -27,14 +27,25 @@ def cards_shuffle(d):
         value=d[key]
         values.append(value)
     return(keys, values)
+
+# Take the top card from the deck (and remove it from the deck) 
+def hit(d):
+    keys=list(d.keys())
+    card_key=keys.pop()
+    card_value=d[card_key] 
+    # Removing the card from the deck
+    d.pop(card_key) 
+    return(card_key,card_value,d)
+
 #endregion   
 #region - Creating class for game participants
 # Create a class GameParticipants with the attributes hand (=cards in hand), status (=active if the participant can continue the game)
 # Using custom constructor (__init__) to set up default values for all instances
 class GameParticipants:
-    def __init__(self, hand={}, status='Active'):
+    def __init__(self, hand={}, status='Active', final_hand_sum=0):
         self.hand=hand
         self.status=status
+        self.final_hand_sum=final_hand_sum
 
     def add_card_to_hand(self, deck):
         keys=list(self.hand.keys())
@@ -43,18 +54,32 @@ class GameParticipants:
         keys.append(card_key)
         values.append(card_value)
         self.hand=dict(zip(keys,values))
+        self.final_hand_sum=sum(values)
         deck=updated_deck 
-        return(self.hand,deck)   
-    
-    def blackjack_check(self, hand, status):
-        hand_values=list(hand.values())
-        if sum(hand_values)==21 and len(hand_values)==2:
+        return(self.hand,deck) 
+       
+    def blackjack_check(self):
+        hand_values=list(self.hand.values())
+        if sum(hand_values)==21: 
             self.status='Blackjack'
         return(self.status)
+
+    def hand_sum_with_ace_check(self):
+        num_aces= len(re.findall('Ace',''.join(self.hand.keys())))
+        if num_aces:
+            print(f'There is(are) {num_aces} ace(s) in this hand')
+            for i in range(0,num_aces):
+                self.final_hand_sum-=10
+                if self.final_hand_sum<=21:
+                    break
+                else:
+                    continue  
+        return(self.final_hand_sum)
+    
 #endregion
 #region - Creating a subclass players
-# Create a subclass Player with an additional attributes id, bet, chips_value
-# Adding an extra instance variable player_id and use super() to call attributes and method of the parent class
+# Create a subclass Player with an additional attributes and methods
+# Adding an extra instance variables e.g. player_id and use super() to call attributes and method of the parent class
 class Player(GameParticipants):
     def __init__(self, id, bet, chips_value):
         self.id=id
@@ -62,72 +87,91 @@ class Player(GameParticipants):
         self.chips_value=chips_value
         super().__init__()
     
-    def player_hand_analyser(self,hand,status):
-        hand_keys=list(self.hand.keys())
-        hand_values=list(self.hand.values())
-        if sum(hand_values)==21:
-            self.status='21 Winner'
-        if sum(hand_values)<21:
-            pass
-        else:
-            num_aces= len(re.findall('Ace',''.join(hand.keys())))
-            if num_aces!=0:
-                print(f'There are {num_aces} in this hand')
-            if num_aces==0:
-                self.status='Lost'
+    def player_main_game(self,deck):
+        print(f'Player {self.id} is playing')
+        self.status, self.final_hand_sum =self.player_hand_analyser()
+        while self.status=='Active':
+            player_move=input('Please choose your action, hit or stand: ')
+            if player_move.strip().lower() =='stand':
+                self.final_hand_sum=self.player_hand_analyser()[1]
+                self.status='Standing'
+                print(f'The hand sum is {self.final_hand_sum}')
+            elif player_move.strip().lower()=='hit':
+                self.add_card_to_hand(deck)
+                self.status, self.final_hand_sum =self.player_hand_analyser()
             else:
-                hand_sum=sum(hand_values)
-                print(f'The sum of this hand is {hand_sum}')
-                for i in range(0,num_aces):
-                    hand_sum-=10
-                    print(f'This is the ace corrected sum of hand {hand_sum}')
-                    if hand_sum==21:
-                        self.status='21 Winner'
-                    if hand_sum<21:
-                        pass
-                        break
-                    else:
-                        continue
-                print(self.status)
-        return(status)
+                print('Unknown command. Please choose between hit and stand')    
+        return(self.status, self.final_hand_sum)
+
+    def player_hand_analyser(self):
+        if self.final_hand_sum<21 and self.status!='Standing':
+            print(f'{self.hand}. The hand sum is {self.final_hand_sum}')
+            pass
+        elif self.final_hand_sum==21:
+            print(f'{self.hand}. The sum is 21, you\'re a winner!')
+            self.status='21 Winner'
+        else:
+            self.final_hand_sum=self.hand_sum_with_ace_check()
+            if self.final_hand_sum<21:
+                print(f'{self.hand}. The hand sum is {self.final_hand_sum}')
+                pass
+            elif self.final_hand_sum==21:
+                print(f'{self.hand}. The sum is 21, you\'re a winner!')
+                self.status='21 Winner'
+            else:
+                print(f'{self.hand} The sum is {self.final_hand_sum}, which is over 21. It\'s a bust!')
+                self.status='Lost'
+        return(self.status, self.final_hand_sum)
+    
 #endregion
 #region - Creating a subclass dealer
 # Create a subclass Dealer which will have only one instance 
-# Doesn't have any extra attributes compared to the parent class
+# Doesn't have any extra attributes compared to the parent class, but has it's own methods
 class Dealer (GameParticipants):
 
-    def dealer_hand_analyser(self,hand,status):
-        hand_keys=list(self.hand.keys())
-        hand_values=list(self.hand.values())
-        if sum(hand_values)<17:
+    def dealer_hole_check (self):
+        if sum(list(self.hand.values()))!=21 and list(self.hand.items())[1][1] in [10,11]:
+            print('The dealer has checked and he doesn\'t have a blackjack')
+
+    def dealer_hand_analyser(self):
+        if self.final_hand_sum<17:
+            print(f'The dealer took a card. His updated hand is {self.hand}. The hand sum is {self.final_hand_sum}')
             pass
-        elif sum(hand_values)<21:
+        elif self.final_hand_sum<=21:
             self.status='Standing'
-        elif sum(hand_values)==21:
-            status='21 Winner'
+            print(f'The dealer took a card. His updated hand is {self.hand}. \nThe dealer\'s hand sum is {self.final_hand_sum} which is equal or over 17. The dealer finished the game. ')
         else:
-            num_aces= len(re.findall('Ace',''.join(hand.keys())))
-            if num_aces==0:
-                status='Lost'
+            print(f'The dealer took a card. His updated hand is {self.hand}.')
+            self.final_hand_sum=self.hand_sum_with_ace_check()
+            print(f'The hand sum is {self.final_hand_sum}.')
+            if self.final_hand_sum<17:
+                pass
+            elif self.final_hand_sum<=21:
+                self.status='Standing'
+                print(f'The dealer will stand and calculate the game results.')
             else:
-                hand_sum=sum(hand_values)
-                for i in range(0,num_aces):
-                    hand_sum-=10
-                    if hand_sum==21:
-                        status='21 Winner'
-                    if hand_sum<21:
-                        break
-                    else:
-                        continue
-        return(status)
+                self.status='Lost'
+                print(f'The dealer bust.')
+        return(self.status, self.final_hand_sum)
     
+    def dealer_main_game(self,deck):
+        print('\nThe dealer is playing')
+        print(f'This is the dealer hand: {self.hand}. The hand sum is {self.final_hand_sum}')
+        print('The dealer has to take cards from the deck until he hits 17 or more')
+        if self.final_hand_sum>=17:
+            self.status='Standing'
+            print(f'The dealer is standing still as he has the required sum in his hand already')
+        else:
+            while self.status=='Active':
+                self.add_card_to_hand(deck)
+                self.status,self.final_hand_sum=self.dealer_hand_analyser()
+        return(self.status, self.final_hand_sum)
 #endregion
 #region - Functions for generating the list of players and removing players who won/lost from it
 # Get the number of players and generate a list with their ids
 def generate_player_ids():
     n=int(input('Please enter a number of players: '))
     player_ids = ["player" + str(i+1) for i in range(n)]
-    # print(player_ids)
     return(player_ids)
 
 # Create a list of players 
@@ -138,61 +182,48 @@ def create_players_list():
         players_list.append(player)
     return(players_list)   
 
-#Remove players who have won or lost from the list of players
-def players_list_update(players):
-    num_of_players=len(players.copy())
-    players=[player for player in players if (player.status=='Active' or player.status=='Standing')]
-    num_of_players_updated=len(players)
-    if num_of_players!=num_of_players_updated:
-        print('This is the list of players still in the game: ')
-        for player in players:
-            print(player.id, end= ' ')
-    else:
-        print('All players continue the game')
-    print('\n')    
-    return(players)
-#endregion
-#region - Functions for processing a blackjack
-
-def dealer_blackjack_results (player, dealer):
-    if player.status == 'Blackjack': 
-        print(f'Both {player.id} and the dealer have a blackjack. {player.id} keeps their bet')
-    else:
-        player.bet=0
-        print(f'{player.id} lost his bet')    
-
-def player_blackjack_results(player):
-    if player.status=='Blackjack':
-        player.chips_value+=1.5*player.bet
-        print(f'Player {player.id} has a blackjack. He has won {1.5*player.bet} and ended the game.')
+def eligible_players(players, game_over):
+    active_players=[player for player in players if player.status in ['Active','Standing','21 Winner']]
+    if not active_players:
+        game_over=True
+        print('There are no players eligible to continue the game')
+    return(game_over)    
 #endregion
 
+#Calculate the game results
+def game_results(dealer, players): 
+    print('\nThe game results are: ')
+    for player in players:
+        if player.status=='Blackjack' and dealer.status!='Blackjack':
+            print(f'{player.id}: {player.id} is a blackjack winner and is paid 3:2 on his bet')
+        elif player.status=='Blackjack' and dealer.status=='Blackjack':
+            print(f'{player.id}: {player.id} an the dealer both have blackjacks, so {player.id} keeps his bet')
+        elif player.status!='Blackjack' and dealer.status=='Blackjack':
+            print(f'{player.id}: The dealer has a blackjack and {player.id} doesn\'t. {player.id} lost his bet ')
+        elif player.status =='Lost':
+            print(f'{player.id}: {player.id} bust. He lost the game and his bet')    
+        elif player.status!='Lost' and dealer.status=='Lost':
+            print(f'{player.id}: The dealer bust and {player.id} didn\'t. {player.id} is a winner and is paid 1:1 on his bet')   
+        else:
+            if player.final_hand_sum > dealer.final_hand_sum:
+                print(f'{player.id}: Player {player.id} has more points ({player.final_hand_sum}) than the dealer({dealer.final_hand_sum}). {player.id} won the game and is paid an equivalent of his bet')
+            elif player.final_hand_sum == dealer.final_hand_sum:
+                print(f'{player.id}: The dealer and the {player.id} has the same points ({player.final_hand_sum}), so {player.id} keeps his bet ')   
+            else:
+                print(f'{player.id}: Player {player.id} has fewer points ({player.final_hand_sum}) than the dealer ({dealer.final_hand_sum}). {player.id} lost the game and his bet')
 
 
-
-# Take the top card from the deck (and remove it from the deck) 
-def hit(d):
-    keys=list(d.keys())
-    card_key=keys.pop()
-    card_value=d[card_key]
-    # Removing the card from the deck
-    d.pop(card_key) 
-    return(card_key,card_value,d)
-
-    
-
-
+# Body of the program
 dealer=Dealer()
 players=create_players_list()
+game_over=False
 # Game set up (cards are shuffled only once in the beginning of the game)
 deck=deck_generation(cards_generation()[0], cards_generation()[1])
-# Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
+# Since we use random.shuffle in cards_shuffle we need to make sure that we call cards_shuffle function only once 
 # If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
 # This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
-# Naturally keys and card values wouldn't match 
 shuffled_keys, shuffled_values=cards_shuffle(deck)
 deck=deck_generation(shuffled_keys, shuffled_values)
-# print(f'This is the shuffled deck of 52 cards: \n {deck}')
                                                                                                                                                                                                                                                                                                
 # First card distribution
 num_initial_rounds=2
@@ -201,215 +232,48 @@ for round in (1, num_initial_rounds+1):
         player.add_card_to_hand(deck)
     dealer.add_card_to_hand(deck)
 
-#Print statement to display initial hands for players and  upcard of the dealer
+#Print statement to display initial hands for players and the upcard of the dealer
 for player in players:
     print(f'This is the hand of the {player.id}: {player.hand}')
-print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')    
+print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')  
  
 #Blackjack analysing
 for player in players:
-    player.status=player.blackjack_check(player.hand, player.status)
-dealer.status=dealer.blackjack_check(dealer.hand, dealer.status)
+    player.status=player.blackjack_check()
+    if player.status=='Blackjack':
+        print(f'Player {player.id} has a blackjack and has ended the game. He will be paid at the end of the game')
+# Checking if there are any players who didn't have a blackjack and therefore can continue with the game        
+game_over = eligible_players(players, game_over)
 
+dealer.status=dealer.blackjack_check()
+dealer.dealer_hole_check()
 if dealer.status=='Blackjack':
-    print(f'The dealer has checked his second card, and he has a blackjack. Dealer hand is {dealer.hand} ')
-    for player in players:
-        dealer_blackjack_results(player,dealer)
-    print('The game has ended')
-else:
-    for player in players:
-        player_blackjack_results(player)
-    players=players_list_update(players)    
+    game_over=True 
+    print(f'The dealer has checked his second card, and he has a blackjack. Dealer\'s hand is {dealer.hand} ')
+    print('The game has ended for all participants')
 
-#Main game
-print('The main game is starting')
-for player in players:
-    print(f'Player {player.id} is playing')
-    print(f'Player hand: {player.hand}')
-    while player.status=='Active':
-        player_move=input('Please choose your action, hit or stand: ')
-        if player_move.strip() =='stand':
-            player.status='Standing'
+#Main game - goes ahead if the dealer doesn't have a blackjack and there are some participants who don't have a blackjack
+if game_over==False:
+    print('\nThe main game is starting')
+    for player in players: 
+        if player.status=='Blackjack':
+            pass
         else:
-            player.add_card_to_hand(deck)
-            print(player.hand)
-            player.status=player.player_hand_analyser(player.hand, player.status)
-            if player.status=='Lost':
-                print(f'The {player.id} has bust')
-players_list_update(players)  
+            print('\n')
+            player.status, player.final_hand_sum=player.player_main_game(deck)
 
-print('The dealer is playing')
-
-# while dealer.status=='Active':
-#     dealer.add_card_to_hand(deck)
-#     print(dealer.hand)
-#     dealer.status=dealer.dealer_hand_analyser(dealer.hand,dealer.status)
-#     if dealer.status=='Lost':
-#         print(f'The dealer has bust')
-#     if dealer.status=='Standing':
-#         print('The dealer has hit 17 and ready to compare his hands to the players hands.')
-
-
-        
-
-
-
-
-#region
-# Blackjack check
+# Status and hand_sum for each player - useful for debugging            
+# print('\n')       
 # for player in players:
-#     player.is_blackjack=blackjack_check(player.hand)
-# dealer.is_blackjack=blackjack_check(dealer.hand)
-#endregion
+#     print(f'{player.id}: {player.status}, {player. final_hand_sum}')
 
-# for player in players:
-#     print(f'This is {player.id} hand: {player.hand}') 
-#     if player.status=="Blackjack":
-#         print(f'{"Wohoo, it\'s a blackjack!"}')
-# print(f'This is dealer hand: {dealer.hand}')
-# print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')
-# if dealer.status=='Blackjack':
-#     print(f'The dealer has checked and he has a blackjack. This is the dealer\'s hand: {dealer.hand}')
-#     print('The game is over for all players. These are the game results: ')
-# # print(f'These are the cards still in the deck: {deck}')
-# # print(f'There are {len(deck)} cards left in the deck')
-# initial_round_results(player.status, dealer.status)
+#Checking if there are any players who didn't bust
+game_over = eligible_players(players, game_over)
 
-# if dealer.is_blackjack==False:
-#     players=players_list_update(players)
-
-# print('''This is the list of available actions:
-#     Stand - do nothing, pass the turn to the next player
-#     Hit - take a card
-#     Double - increase your bet up to 2X
-#     Split - available only if the player has two cards of the same value
-#     Surrender - end the game immediately and keep half of the bet''')
-
-# for player in players:    
-#     bust=False
-#     while not bust:
-#         next_move=input('Please enter h if you\'d like to hit or s if you prefer to stand: ')
-#         if next_move=='h':
-#             player.hand, deck=player.add_card_to_hand(deck)
-#             print(player.hand)
-#             bust=True
-#             print(bust)
-
-
- 
-
-# def bust_checker(hand):
-#     hand_keys=list(hand.keys())
-#     hand_values=list(hand.values())
-#     print(f'The sum of hand is {sum(hand_values)}')
-#     if sum(hand_values)<=21:
-#         pass
-#     all_keys=''.join(hand.keys())
-#     re.findall('Ace' in all_keys)
-
-
-
-
-# dealer=Dealer()
-# players=players_list()
-# # Game set up (cards are shuffled only once in the beginning of the game)
-# deck=deck_generation(cards_generation()[0], cards_generation()[1])
-# # Since we use random.shuffle in card_shuffle we need to make sure that we call cards_shuffle function only once and return both keys and values
-# # If we do shuffled_deck=deck_generation(cards_shuffle(deck)[0], cards_shuffle(deck)[1]) we call the function twice
-# # This means that re-shuffling takes place twice, with keys returned at fist iteration and values after the second re-shuffling
-# # Naturally keys and card values wouldn't match 
-# shuffled_keys, shuffled_values=cards_shuffle(deck)
-# deck=deck_generation(shuffled_keys, shuffled_values)
-# # print(f'This is the shuffled deck of 52 cards: \n {deck}')
-
-
-                                                                                                                                                                                                                                                                                                
-
-# # First card distribution
-# num_initial_rounds=2
-# for round in (1, num_initial_rounds+1):
-#     for player in players:
-#         player.add_card_to_hand(deck)
-#     dealer.add_card_to_hand(deck)
-
-# # Blackjack check
-# for player in players:
-#     player.is_blackjack=blackjack_check(player.hand)
-# dealer.is_blackjack=blackjack_check(dealer.hand)
-
-# for player in players:
-#     print(f'This is {player.player_id} hand: {player.hand} {"Wohoo, it\'s a blackjack!" if player.is_blackjack==True else ""}')
-# # print(f'This is dealer hand: {dealer.hand}')
-# print(f'This is the dealer\'s upper card: {list(dealer.hand.items())[1]}')
-# if dealer.is_blackjack==True:
-#     print(f'The dealer has checked and he has a blackjack. This is the dealer\'s hand: {dealer.hand}')
-#     print('The game is over for all players. These are the game results: ')
-# # print(f'These are the cards still in the deck: {deck}')
-# # print(f'There are {len(deck)} cards left in the deck')
-
-# for player in players:
-#     player.player_status=blackjack_winners(player.is_blackjack,dealer.is_blackjack) 
-#     initial_round_results(player)
-
-# if dealer.is_blackjack==False:
-#     players=players_list_update(players)
-
-# print('''This is the list of available actions:
-#     Stand - do nothing, pass the turn to the next player
-#     Hit - take a card
-#     Double - increase your bet up to 2X
-#     Split - available only if the player has two cards of the same value
-#     Surrender - end the game immediately and keep half of the bet''')
-
-# for player in players:    
-#     bust=False
-#     while not bust:
-#         next_move=input('Please enter h if you\'d like to hit or s if you prefer to stand: ')
-#         if next_move=='h':
-#             player.hand, deck=player.add_card_to_hand(deck)
-#             print(player.hand)
-#             bust=True
-#             print(bust)
-
-
+if game_over==False:
+    input('\nPlease press enter for the dealer to play: ')
+    dealer.status, dealer.final_hand_sum=dealer.dealer_main_game(deck)
     
-# def hand_analyser(hand):
-#     hand_keys=list(hand.keys())
-#     hand_values=list(hand.values())
-#     if sum(hand_values)==21 and len(hand_values)==2:
-#         status='Blackjack'
-#     elif sum(hand_values)==21:
-#         status='Winner'
-#     if sum(hand_values)<21:
-#         status ='Still in the game'
-#     else:
-#         num_aces= len(re.findall('Ace' in ''.join(hand.keys())))
-#         if num_aces==0:
-#             status='Lost'
-#         else:
-#             hand_sum=sum(hand_values)
-#             for i in range(0,num_aces):
-#                 hand_sum-=10
-#                 if hand_sum==21:
-#                     status='Winner'
-#                 if hand_sum<21:
-#                     status='Still in the game'
-#                     break
-#                 else:
-#                     continue
-#     return(status)
-
-
-
- 
-
-# def bust_checker(hand):
-#     hand_keys=list(hand.keys())
-#     hand_values=list(hand.values())
-#     print(f'The sum of hand is {sum(hand_values)}')
-#     if sum(hand_values)<=21:
-#         pass
-#     all_keys=''.join(hand.keys())
-#     re.findall('Ace' in all_keys)
+game_results(dealer, players)
 
 
