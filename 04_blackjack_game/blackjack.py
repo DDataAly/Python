@@ -86,7 +86,29 @@ class Player(GameParticipants):
         self.bet=bet
         self.chips_value=chips_value
         super().__init__()
-    
+
+    # Adding extra options (splitting, doubling down and surrendering) available at the first move 
+    # def player_first_move(self):
+    #     options=['hit', 'stand', 'double down', 'surrender']
+    #     if list(player.hand.values())[0]==list(player.hand.values())[1]:
+    #         options.append('split')
+    #     valid_input=False    
+    #     while valid_input==False:    
+    #     player_first_move=input(f'Please choose one of the following options {options}:  ')
+    #     if player_first_move in options:
+    #         valid_input=True
+    #     if player_first_move in ['hit','stand']:
+    #         player_main_game(self,deck) 
+    #     if player_first_move=='double down':
+    #         player_double_down (self)
+    #     if player first_move=='surrender':
+    #         player_surrender(self)
+    #     if player_first_move=='split':
+    #         player_split(self)
+    #     else:
+    #         print("Please enter a valid command")    
+           
+
     def player_main_game(self,deck):
         print(f'Player {self.id} is playing')
         self.status, self.final_hand_sum =self.player_hand_analyser()
@@ -102,6 +124,14 @@ class Player(GameParticipants):
             else:
                 print('Unknown command. Please choose between hit and stand')    
         return(self.status, self.final_hand_sum)
+    
+        def player_first_move(self):
+        options=['hit', 'stand', 'double down', 'surrender']
+        if list(player.hand.values())[0]==list(player.hand.values())[1]:
+            options.append('split')
+        player_first_move=input(f'Please choose one of the following options {options}:  ')
+        if player_first_move in ['hit','stand']:
+            player_main_game(self,deck)    
 
     def player_hand_analyser(self):
         if self.final_hand_sum<21 and self.status!='Standing':
