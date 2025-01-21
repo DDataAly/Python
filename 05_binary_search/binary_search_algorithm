@@ -1,0 +1,98 @@
+# Intro to algorithms and efficiency exercise - linear vs binary search algorithm
+
+# Defining a baseline - linear search worst case scenario
+# import time
+# begin=time.time()
+
+# l=[x for x in range (1,1000)]
+# k=999
+
+# if k<l[1]:
+#     print (f'Item {k} is not in the list')
+# elif k>l[len(l)-1]:
+#     print (f'Item {k} is not in the list') 
+# else:       
+#     for item in l:
+#         if item==k:
+#             print (f"The index of {k} is {l.index(k)}")
+#             break
+
+# time.sleep(1)
+# end=time.time()
+
+# print(f"Runtime is {end-begin}")
+# Runtime is 1.000321626663208
+
+
+
+# Binary search - my solution from scratch
+# import time
+# begin=time.time()
+
+# l=[x for x in range (1,1000)]
+# k=999
+
+
+# min=0
+# max=len(l)-1
+# mid=(min+max)//2
+
+# if k>l[max]:
+#     print(f'There is no {k} in the list')
+# elif k<l[0]:
+#     print(f'There is no {k} in the list')     
+# else:    
+#     print(f'Original l[mid] is {l[mid]}')
+#     while True:
+#         if l[mid]==k:
+#             print(f'The index of {k} is {mid}')
+#             break     
+#         elif k<l[mid]:
+#             max=mid-1
+#         elif k>l[mid]:
+#             min=mid+1
+#         mid=(min+max)//2
+
+# time.sleep(1)
+# end=time.time()
+
+# print(f"Runtime is {end-begin}")
+# # Runtime is 1.0003159046173096
+# # Runtime is 1.000154972076416
+
+
+# Binary search recommended solution
+
+import time
+begin=time.time()
+
+l=[x for x in range (1,1000)]
+k=999
+
+min=0
+max=len(l)-1
+
+while min <= max:
+    mid = min + (max - min) // 2
+
+    if l[mid] == k:
+        print(f'The index of k is {mid}')
+        break
+    elif k < l[mid]:
+        max = mid - 1
+    else:
+        min = mid + 1
+else:
+    print(f'{k} not found in the list')
+
+
+time.sleep(1)
+end=time.time()
+
+# print(f"Runtime is {end-begin}")
+# # Runtime is 1.0004708766937256
+# # Runtime is 1.000152826309204
+
+ 
+
+
