@@ -34,7 +34,7 @@ def cards_shuffle(d):
 #region - Creating list of players
 
 def generate_player_ids():
-    n=int(input('Please enter a number of players: '))
+    n=int(input('\nPlease enter a number of players: '))
     player_ids = ["player" + str(i+1) for i in range(n)]
     return(player_ids)
 

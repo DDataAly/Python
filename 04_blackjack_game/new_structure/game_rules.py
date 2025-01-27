@@ -1,5 +1,6 @@
 import game_setup as setup
-import status_analyser as status
+import status_analyser as analyser
+import class_player
 
 class Game:
     def __init__(self, players, dealer, deck, game_over=False):
@@ -16,32 +17,74 @@ class Game:
             self.game_over=True  
             print('The dealer has a blackjack. The game has ended')
         else:      
-            eligible_players=[player for player in self.players if player.status in ['Active','Standing','21 Winner']]
+            eligible_players=[player for player in self.players if player.status=='Still playing']
             if not eligible_players:
                 self.game_over=True
                 print('There are no players eligible to continue the game. The game has ended')
         return(self.game_over)
     
     def initial_card_distribution(self):
-        print('The dealer gives two cards to all players and himself')
+        print('The dealer gives two cards to all players and himself\n')
         num_initial_rounds=2
         for round in (1, num_initial_rounds+1):
             for player in self.players:
-                player.add_card_to_hand(self.deck)
-            self.dealer.add_card_to_hand(self.deck)
+                analyser.add_card_to_hand(player,self.deck)
+            analyser.add_card_to_hand(self.dealer,self.deck)
         for player in self.players:    
             player.show_hand()    
-        self.dealer.show_upper_card()    
-        return(self)
+        self.dealer.show_upper_card()   
+        #For testing - replace the last line with the below
+        #self.dealer.show_hand() 
         
     def blackjack_check(self):
-        status.dealer_hole_check (self.dealer)
+        analyser.dealer_hole_check (self.dealer)
+        for player in self.players:
+            analyser.blackjack_check(player)
+            if player.status=='Blackjack':
+                print(f'The {player.id} has a blackjack and won the game')
+        self.check_players_to_continue()
+        analyser.blackjack_check(self.dealer)
+        if self.dealer.status=='Blackjack':
+            self.game_over=True
+            print(f'The dealer has a blackjack {self.dealer.hand}. This is the end of the game for all players')
+
+    def check_players_to_continue(self):
+        active_players=[player for player in self.players if player.status=='Still playing']
+        if not active_players:
+            self.game_over=True
+            print('There are no players to continue to play...calculating game results')
+
+    def game_results_blackjack(self):
+        print ('\nGame results: \n')
+        if self.dealer.status=='Blackjack':
+            for player in self.players:
+                if player.status=='Blackjack':
+                    print(f'{player.id} keeps their bet')
+                else:
+                    print(f'{player.id} lost their bet')
+        else:
+            for player in self.players:
+                print(f'{player.id} is paid 3:2 on their bet')   
+
+    def players_to_play(self):
+        for player in self.players:
+            player.player_main_game(self.deck)
+        self.check_players_to_continue()
+
+    def dealer_to_play(self):
+        self.dealer.dealer_main_game(self.deck)
+                    
+
+
+
+        
+
   
 
 def game_start():
     current_game=Game([],{},{})
     current_game.deck,current_game.players,current_game.dealer=setup.setup_game()
-    print(f'All players are ready to start playing ')
+    print(f'All players are ready to start playing\n ')
     return(current_game)
 
 
