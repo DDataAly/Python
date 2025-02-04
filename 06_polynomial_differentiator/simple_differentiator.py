@@ -1,76 +1,3 @@
-# def polynomial_parser(polynomial):
-#     parsed_list_addition_operand=polynomial.split('+')
-#     parsed_polynomial=[]
-#     for item in parsed_list_addition_operand:
-#         subtraction_parsed_item=item.split('-')
-#         for monomial in subtraction_parsed_item:
-#             parsed_polynomial.append(monomial)
-#     return(parsed_polynomial)
-
-# def polynomial_operands(polynomial):
-#     operands_list=[symbol for symbol in polynomial if symbol in ['+','-']]
-#     return(operands_list)
-
-# def monomial_coefficient_parser(monomial):
-#     coefficient=''
-#     for symbol in monomial:
-#         if symbol.isalpha()==True or symbol=='(':
-#             break
-#         else:
-#             if symbol.isdigit()==True:
-#                 coefficient=coefficient+symbol
-#             else:
-#                 break
-#     if coefficient=='':
-#         coefficient=1
-#     else:
-#         coefficient=int(coefficient)            
-#     return(coefficient)        
-
-# def monomial_base_parser(monomial):
-#     i=0
-#     for symbol in monomial:
-#         if symbol.isalpha()==True or symbol=='(':
-#             break
-#         else:
-#             i=i+1
-#     base_start_index=i
-#     power_symbol_index=monomial.find('^')
-#     if power_symbol_index!=-1:
-#         base_end_index=power_symbol_index
-#     else:
-#         base_end_index=len(monomial)           
-#     base=monomial[base_start_index:base_end_index]
-#     return(base)
-
-# def monomial_power_parser(monomial):
-#     power_symbol_index=monomial.find('^')
-#     if power_symbol_index==-1:
-#         power=1
-#     else:
-#         power=int(monomial[power_symbol_index+1:]) 
-#     return(power)       
-
-# def monomial_differentiator(monomial):
-#     monomial_derivative=''
-#     if len(monomial)==1:
-#         if monomial.isdigit()==True:
-#             pass
-#         else:
-#             monomial_derivative='1'
-#     else:
-#         a=monomial[0:monomial.index('*')]       
-#         base=monomial[(monomial.index('*')+1):monomial.index('^')]
-#         power=monomial[(monomial.index('^')+2):]
-#         #derivative_a=a*power
-#     return(a,base,power)    
-
-# s='8(x-4)^5'
-# c=monomial_coefficient_parser(s)
-# b=monomial_base_parser(s)
-# p=monomial_power_parser(s)
-# print(f'Coefficient is {c}, base is {b}, power is {p}.')
-
 def bracket_counter(opens, closes, symbol):
     if symbol=='(':
         opens+=1
@@ -81,27 +8,241 @@ def bracket_counter(opens, closes, symbol):
 def is_plus_or_minus(symbol):
     return symbol in ['+', '-']
 
-
-input_string='23(x+1)^5+3*x^4+6*x+11'
-parsed_polynomial=[]
-i=0
-while i<len(input_string):
-    monomial=''
-    opens,closes=0,0
-    for symbol in input_string[i: len(input_string)]:
-        i+=1
-        opens, closes=bracket_counter(opens,closes, symbol)
-        if is_plus_or_minus(symbol)==False:
-            monomial+= symbol
-        else:
-            if opens>closes:
-                monomial+=symbol
+def polynomial_parser(input_string):
+    parsed_polynomial=[]
+    i=0
+    while i<len(input_string):
+        monomial=''
+        opens,closes=0,0
+        for symbol in input_string[i: len(input_string)]:
+            i+=1
+            opens, closes=bracket_counter(opens,closes, symbol)
+            if all ([
+                monomial,
+                is_plus_or_minus(symbol),
+                opens==closes
+                ]): 
+                    i=i-1
+                    break 
             else:
-                break 
-    parsed_polynomial.append(monomial)
+                monomial+=symbol   
+        parsed_polynomial.append(monomial)
+        return parsed_polynomial
 
 
-print(parsed_polynomial)
+def monomial_coefficient_parser(monomial):
+    coefficient=''
+    for symbol in monomial:
+        if symbol.isdigit() or symbol in ('+','-'):
+            coefficient+=symbol
+        else:
+            break
+    
+    if coefficient=='-':
+        coefficient='-1'
+    elif coefficient=='+':
+        coefficient='+1'    
+    
+    return int(coefficient) if coefficient else 1      
+
+
+def monomial_base_parser(monomial):
+    for i,symbol in enumerate(monomial):
+        if symbol.isalpha() or symbol=='(':
+            break
+    base_start_index=i
+
+    power_symbol_index=monomial.find('^')
+    base_end_index=power_symbol_index if power_symbol_index!=-1 else len(monomial)           
+    base=monomial[base_start_index:base_end_index]
+    return base
+
+
+def monomial_exponent_parser(monomial):
+    power_index=monomial.find('^')
+    exponent= int(monomial[power_index+1:]) if power_index!=-1 else 1
+    return exponent       
+
+
+def monomial_differentiator(monomial):
+    if len(monomial)==1 and monomial.isdigit():
+        return('')
+    if len(monomial)==1 and not monomial.isdigit():
+        return(1)
+
+    else:
+        derivative=''
+        coefficient=monomial_coefficient_parser(monomial)
+        base=monomial_base_parser(monomial)
+        exponent=monomial_exponent_parser(monomial)
+
+
+
+        derivative_coefficient=str(coefficient*exponent)
+        derivative_exponent=str(exponent-1)
+
+        print(derivative_coefficient)
+        print(derivative_coefficient)
+
+        derivative=derivative_coefficient+base if derivative_exponent=='0' else derivative_coefficient+base+'^'+derivative_exponent
+    return(derivative)    
+
+s='5(x+4)'
+
+print(monomial_differentiator(s))
+
+
+
+# def bracket_counter(opens, closes, symbol):
+#     if symbol=='(':
+#         opens+=1
+#     if symbol==')':
+#         closes+=1 
+#     return opens, closes   
+
+# def is_plus_or_minus(symbol):
+#     return symbol in ['+', '-']
+
+
+# input_string='23(x+1)^5+3*x^4+6*x+11'
+# parsed_polynomial=[]
+# i=0
+# while i<len(input_string):
+#     monomial=''
+#     opens,closes=0,0
+#     for symbol in input_string[i: len(input_string)]:
+#         i+=1
+#         opens, closes=bracket_counter(opens,closes, symbol)
+#         if is_plus_or_minus(symbol)==False:
+#             monomial+= symbol
+#         else:
+#             if opens>closes:
+#                 monomial+=symbol
+#             else:
+#                 break 
+#     parsed_polynomial.append(monomial)
+
+
+# print(parsed_polynomial)
 
 
 #https://campus.datacamp.com/courses/writing-efficient-python-code/foundations-for-efficiencies?ex=7
+
+# def bracket_counter(opens, closes, symbol):
+#     if symbol=='(':
+#         opens+=1
+#     if symbol==')':
+#         closes+=1 
+#     return opens, closes   
+
+# def is_plus_or_minus(symbol):
+#     return symbol in ['+', '-']
+
+# def create_operands_list(input_string):
+#     if input_string[0]=='-':
+#         operands_list=['-']
+#     else: 
+#         operands_list[0]='+'    
+#     return(operands_list)    
+
+
+# input_string='-23(x+1)^5+3*x^4+6*x-11'
+# parsed_polynomial=[]
+# polynomial_operands=create_operands_list(input_string)
+# i=0
+# while i<len(input_string):
+#     monomial=''
+#     opens,closes=0,0
+#     for symbol in input_string[i: len(input_string)]:
+#         i+=1
+#         opens, closes=bracket_counter(opens,closes, symbol)
+#         if is_plus_or_minus(symbol)==False:
+#             monomial+= symbol
+#         else:
+#             if opens>closes:
+#                 monomial+=symbol
+#             else:
+#                 polynomial_operands.append(symbol)
+#                 #i=i-1
+#                 break 
+#     parsed_polynomial.append(monomial)
+
+
+# print(parsed_polynomial)
+# print(polynomial_operands)
+
+
+# def monomial_differentiator(monomial):
+#     derivative=''
+#     if len(monomial)==1:
+#         if monomial.isdigit():
+#             pass
+#         else:
+#             derivative='1'
+#     else:
+#         a=monomial[0:monomial.index('*')]       
+#         base=monomial[(monomial.index('*')+1):monomial.index('^')]
+#         power=monomial[(monomial.index('^')+2):]
+#         #derivative_a=a*power
+#     return(a,base,power)    
+
+
+
+
+
+# def monomial_playground(monomial):
+#     for i,symbol in enumerate(monomial):
+#         if symbol.isalpha() or symbol=='(':
+#             break
+#     base_start_index=i
+
+#     # power_symbol_index=monomial.find('^')
+#     # base_end_index=power_symbol_index if power_symbol_index!=-1 else len(monomial)           
+#     # base=monomial[base_start_index:base_end_index]
+#     return base_start_index
+
+
+# monomial='2*(x+19)^6'  
+# k=monomial_playground(monomial)
+# print(k)   
+
+
+
+# input_string='23(x+1)^5+3*x^4+6*x+11'
+# parsed_polynomial=[]
+# i=0
+# while i<len(input_string):
+#     monomial=''
+#     opens,closes=0,0
+#     for symbol in input_string[i: len(input_string)]:
+#         i+=1
+#         opens, closes=bracket_counter(opens,closes, symbol)
+#         if all ([
+#             monomial,
+#             is_plus_or_minus(symbol),
+#             opens==closes
+#             ]): 
+#                 i=i-1
+#                 break 
+#         else:
+#             monomial+=symbol   
+#     parsed_polynomial.append(monomial)
+
+
+# print(parsed_polynomial)
+
+
+# input_list = ['a', '6', 'b', '3', 'c']
+# # def alpha_reversal(input_list):
+# #     output_list=[]
+# #     for i, item in enumerate(input_list):
+# #         output_list.append (input_list[-i-1]) if item.isalpha() else output_list.append(item)
+# #     return(output_list)
+
+# def beta_reversal(input_list):
+#     blist=[item for item in reversed(input_list) if item.isalpha()]
+#     clist=[blist.pop(0) if item.isalpha() else item for item in input_list]
+#     return(clist)
+
+# alist=beta_reversal(input_list)
+# print(alist)    
