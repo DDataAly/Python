@@ -27,8 +27,7 @@ def polynomial_parser(input_string):
             else:
                 monomial+=symbol   
         parsed_polynomial.append(monomial)
-        return parsed_polynomial
-
+    return parsed_polynomial
 
 def monomial_coefficient_parser(monomial):
     coefficient=''
@@ -65,31 +64,55 @@ def monomial_exponent_parser(monomial):
 
 
 def monomial_differentiator(monomial):
-    if len(monomial)==1 and monomial.isdigit():
+    if monomial.isdigit():
         return('')
-    if len(monomial)==1 and not monomial.isdigit():
-        return(1)
-
     else:
-        derivative=''
         coefficient=monomial_coefficient_parser(monomial)
         base=monomial_base_parser(monomial)
         exponent=monomial_exponent_parser(monomial)
 
+        print(f'Coef is {coefficient}')
+        print(f'Base is {base}')
+        print(f'Exp is {exponent}')
 
-
+        if exponent==1:
+            return(str(coefficient))
+        
         derivative_coefficient=str(coefficient*exponent)
         derivative_exponent=str(exponent-1)
 
-        print(derivative_coefficient)
-        print(derivative_coefficient)
+        if exponent==2:
+            return(derivative_coefficient+base)
+            
+        return(derivative_coefficient+base+'^'+derivative_exponent)     
 
-        derivative=derivative_coefficient+base if derivative_exponent=='0' else derivative_coefficient+base+'^'+derivative_exponent
-    return(derivative)    
 
-s='5(x+4)'
+def polynomial_differentiator(input_string):
+    polynomial_derivative=''
+    parsed_polynomial=polynomial_parser(input_string)
+    for monomial in parsed_polynomial:
+        print(monomial)
+        monomial_derivative=monomial_differentiator(monomial)
+        print(monomial_derivative)
+        polynomial_derivative+=monomial_derivative
+    return(polynomial_derivative)    
 
-print(monomial_differentiator(s))
+
+s='-24'
+d=polynomial_differentiator(s)
+#print(d)
+
+
+# user_input=input('Please enter a polynomial: ')
+# derivative=polynomial_differentiator(user_input)
+# if derivative:
+#     print(f'The derivative of this polynomial is \n{derivative}')
+# else:
+#     print(f'The derivative of this polynomial is 0')
+
+
+
+    
 
 
 
