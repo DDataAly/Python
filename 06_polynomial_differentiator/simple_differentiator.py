@@ -62,8 +62,39 @@ def monomial_exponent_parser(monomial):
     exponent= int(monomial[power_index+1:]) if power_index!=-1 else 1
     return exponent       
 
+def first_symbol_analyser(monomial):
+    if monomial[0] in ('+','-'):
+        monomial_operand=monomial[0] 
+        monomial=monomial[1:]
+    else:
+        monomial_operand='' 
+    return(monomial_operand, monomial)   
+
+
+def monomial_brackets_remover(monomial,monomial_operand):
+    open_bracket_index=monomial.find('(')
+    closed_bracket_index=monomial.rfind(')')
+    monomial=monomial[0:open_bracket_index]+monomial[open_bracket_index+1:closed_bracket_index]
+    parsed_monomial=polynomial_parser(monomial)
+    if monomial_operand=='-':
+        monomial=''
+        for submonomial in parsed_monomial:
+            list(submonomial)
+            if submonomial[0]=='-':
+                submonomial[0]='+'
+            else:
+                submonomial[0]='-'
+            monomial+=str(submonomial)    
+    return (monomial)
+
+
+
+# s='(x+4)'
+# m=monomial_brackets_remover(s,'-')
+# print(m)
 
 def monomial_differentiator(monomial):
+    monomial_operand,monomial=first_symbol_analyser(monomial)
     if monomial.isdigit():
         return('')
     else:
@@ -71,20 +102,25 @@ def monomial_differentiator(monomial):
         base=monomial_base_parser(monomial)
         exponent=monomial_exponent_parser(monomial)
 
+        print(f'Monomial operand is {monomial_operand}')
         print(f'Coef is {coefficient}')
         print(f'Base is {base}')
         print(f'Exp is {exponent}')
 
         if exponent==1:
-            return(str(coefficient))
+            if monomial.find('(')==-1:
+                return(monomial_operand+str(coefficient))
+            # else:
+            #     parsed_monomial=
+
         
         derivative_coefficient=str(coefficient*exponent)
         derivative_exponent=str(exponent-1)
 
         if exponent==2:
-            return(derivative_coefficient+base)
+            return(monomial_operand+derivative_coefficient+base)
             
-        return(derivative_coefficient+base+'^'+derivative_exponent)     
+        return(monomial_operand+derivative_coefficient+base+'^'+derivative_exponent)     
 
 
 def polynomial_differentiator(input_string):
@@ -98,9 +134,9 @@ def polynomial_differentiator(input_string):
     return(polynomial_derivative)    
 
 
-s='-24'
-d=polynomial_differentiator(s)
-#print(d)
+# s='3*x+8'
+# d=polynomial_parser(s)
+# print(d)
 
 
 # user_input=input('Please enter a polynomial: ')
@@ -269,3 +305,8 @@ d=polynomial_differentiator(s)
 
 # alist=beta_reversal(input_list)
 # print(alist)    
+
+
+#Brackets -number of open brackets should match number of closed brackets
+# tbc brackets shouldn't be empty
+# tbc nested brackets like (((x))) not allowed
