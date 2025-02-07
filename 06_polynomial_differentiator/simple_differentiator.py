@@ -58,8 +58,11 @@ def monomial_base_parser(monomial):
 
 
 def monomial_exponent_parser(monomial):
-    power_index=monomial.find('^')
-    exponent= int(monomial[power_index+1:]) if power_index!=-1 else 1
+    power_index=monomial.rfind('^')
+    try:
+        exponent= int(monomial[power_index+1:]) if power_index!=-1 else 1
+    except ValueError:
+            exponent=1
     return exponent       
 
 def first_symbol_analyser(monomial):
@@ -76,22 +79,48 @@ def monomial_brackets_remover(monomial,monomial_operand):
     closed_bracket_index=monomial.rfind(')')
     monomial=monomial[0:open_bracket_index]+monomial[open_bracket_index+1:closed_bracket_index]
     parsed_monomial=polynomial_parser(monomial)
+    print(f'This is the monomial after the brackets remover {parsed_monomial}')
+    monomial=''
     if monomial_operand=='-':
-        monomial=''
-        for submonomial in parsed_monomial:
-            list(submonomial)
+        for submonomial in parsed_monomial: 
             if submonomial[0]=='-':
-                submonomial[0]='+'
-            else:
-                submonomial[0]='-'
+                submonomial='+'+ submonomial[1:]
+            elif submonomial[0]=='+':
+                submonomial='-'+submonomial[1:]
+            else: 
+                submonomial='-'+submonomial    
+            monomial+=str(submonomial)    
+    else:
+        for submonomial in parsed_monomial:
+            if submonomial[0].isalpha() or submonomial[0].isdigit():
+                submonomial='+'+submonomial
             monomial+=str(submonomial)    
     return (monomial)
 
 
 
-# s='(x+4)'
+# s='(x^5+4*x^3-7*x^2-2x+1)'
 # m=monomial_brackets_remover(s,'-')
 # print(m)
+
+
+
+def polynomial_differentiator(input_string):
+    polynomial_derivative=''
+    parsed_polynomial=polynomial_parser(input_string)
+    for monomial in parsed_polynomial:
+        print(f'This is monomial {monomial}')
+        monomial_derivative=monomial_differentiator(monomial)
+        print(f'This is the derivative {monomial_derivative}')
+        polynomial_derivative+=monomial_derivative
+    if not polynomial_derivative:
+        return('') 
+       
+    if polynomial_derivative[0]=='+':
+        formatted_derivative=''.join(symbol for symbol in polynomial_derivative[1:] if symbol.isdigit())
+        if len(polynomial_derivative[1:])==len(formatted_derivative):
+            polynomial_derivative=formatted_derivative
+    return(polynomial_derivative)    
 
 def monomial_differentiator(monomial):
     monomial_operand,monomial=first_symbol_analyser(monomial)
@@ -110,10 +139,10 @@ def monomial_differentiator(monomial):
         if exponent==1:
             if monomial.find('(')==-1:
                 return(monomial_operand+str(coefficient))
-            # else:
-            #     parsed_monomial=
+            else:
+                polynomial_from_the_brackets=monomial_brackets_remover(monomial,monomial_operand)
+                return(polynomial_differentiator(polynomial_from_the_brackets))
 
-        
         derivative_coefficient=str(coefficient*exponent)
         derivative_exponent=str(exponent-1)
 
@@ -122,16 +151,9 @@ def monomial_differentiator(monomial):
             
         return(monomial_operand+derivative_coefficient+base+'^'+derivative_exponent)     
 
-
-def polynomial_differentiator(input_string):
-    polynomial_derivative=''
-    parsed_polynomial=polynomial_parser(input_string)
-    for monomial in parsed_polynomial:
-        print(monomial)
-        monomial_derivative=monomial_differentiator(monomial)
-        print(monomial_derivative)
-        polynomial_derivative+=monomial_derivative
-    return(polynomial_derivative)    
+# s='(x-7)'
+# m=polynomial_differentiator(s)
+# print(m)
 
 
 # s='3*x+8'
@@ -139,12 +161,12 @@ def polynomial_differentiator(input_string):
 # print(d)
 
 
-# user_input=input('Please enter a polynomial: ')
-# derivative=polynomial_differentiator(user_input)
-# if derivative:
-#     print(f'The derivative of this polynomial is \n{derivative}')
-# else:
-#     print(f'The derivative of this polynomial is 0')
+user_input=input('Please enter a polynomial: ')
+derivative=polynomial_differentiator(user_input)
+if derivative:
+    print(f'The derivative of this polynomial is \n{derivative}')
+else:
+    print(f'The derivative of this polynomial is 0')
 
 
 
