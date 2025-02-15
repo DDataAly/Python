@@ -1,4 +1,4 @@
-import symbolic_brackets_opener 
+import polynomial_parser 
 
 def differentiation_base_parser(monomial):
     for i,symbol in enumerate(monomial):
@@ -19,7 +19,7 @@ def differentiation_exponent_parser(monomial):
 
 
 def monomial_differentiator(monomial):
-    monomial_operand,monomial = symbolic_brackets_opener.first_symbol_analyser(monomial)
+    monomial_operand,monomial = polynomial_parser.first_symbol_analyser(monomial)
     if monomial.isdigit():
         return('')
     else:
@@ -27,7 +27,7 @@ def monomial_differentiator(monomial):
     
 
 def calculate_monomial_derivative(monomial, monomial_operand):
-    coefficient = symbolic_brackets_opener.expression_coefficient_parser(monomial)
+    coefficient = polynomial_parser.expression_coefficient_parser(monomial)
     base = differentiation_base_parser(monomial)
     exponent = differentiation_exponent_parser(monomial)
 
@@ -43,8 +43,7 @@ def calculate_monomial_derivative(monomial, monomial_operand):
 
 
 def differentiate_polynomial(input_string):
-    polynomial_for_diff = symbolic_brackets_opener.polynomial_to_differentiate(input_string)
-    parsed_polynomial = symbolic_brackets_opener.parse_polynomial(polynomial_for_diff)
+    parsed_polynomial = polynomial_parser.parse_polynomial_for_differentiation(input_string)
     polynomial_derivative = ''
     for monomial in parsed_polynomial:
         monomial_derivative = monomial_differentiator(monomial)
@@ -53,7 +52,7 @@ def differentiate_polynomial(input_string):
         return('')  
     if polynomial_derivative[0] == '+':
         polynomial_derivative = polynomial_derivative[1:]
-    return(polynomial_derivative)    
+    return polynomial_derivative   
 
 
 
@@ -62,8 +61,18 @@ if __name__ =="__main__":
     user_input = input('Please enter a polynomial: ')
     derivative = differentiate_polynomial(user_input)
     if derivative:
-       print(f'The derivative of this polynomial is \n{derivative}')
+       print(f'The derivative of this polynomial is: {derivative}')
     else:
         print(f'The derivative of this polynomial is 0')
+
+
+#How could we improve the program?
+# - polynomial validation: is given expression a polynomial with one variable?
+# - error prevention instructions: we rely on the variable being 1 char not multiple chars
+# - improve the output: we currently can get things like 14+9 as output, but it would be nice to get 23 instead
+# - brackets opening: we didn't count for a variable being outside brackets, like 14x(x+8)
+#                     we didn't count for the brackets containing a monomial with an exponent, like +16(x^2+4)                                      
+
+
 
  
