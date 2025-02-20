@@ -27,11 +27,11 @@ def is_bracket_opening_required(expression):
 
 def first_symbol_analyser(expression):
     if expression[0] in ('+','-'):
-        expression_operand=expression[0] 
+        expr_operand=expression[0] 
         expression = expression[1:]
     else:
-        expression_operand = '+'  
-    return(expression_operand, expression)     
+        expr_operand = '+'  
+    return(expr_operand, expression)     
 
 
 def expression_coefficient_parser(expression):
@@ -45,61 +45,52 @@ def expression_coefficient_parser(expression):
 
 
 def extract_pre_bracket_operand(expression):
-    pre_bracket_operand, no_operand_expression = first_symbol_analyser(expression)
-    return(pre_bracket_operand, no_operand_expression)
+    pre_bracket_operand, no_operand_expr = first_symbol_analyser(expression)
+    return(pre_bracket_operand, no_operand_expr)
 
 
 def extract_pre_bracket_coefficient(expression):
-    pre_bracket_coefficient = expression_coefficient_parser (expression)
-    return(int(pre_bracket_coefficient))
+    pre_bracket_coef = expression_coefficient_parser (expression)
+    return(int(pre_bracket_coef))
 
 
 def extract_expression_in_brackets(expression):
     open_bracket_index = expression.find('(')
     close_bracket_index = expression.rfind(')')
-    expression_in_brackets=expression[(open_bracket_index + 1): close_bracket_index]
-    return expression_in_brackets
+    expr_in_brackets=expression[(open_bracket_index + 1): close_bracket_index]
+    return expr_in_brackets
 
 
-def extract_expression_base(no_operand_expression, expression_coefficient):
-    if no_operand_expression.isdigit():
+def extract_expression_base(no_operand_expr, expr_coefficient):
+    if no_operand_expr.isdigit():
         return('')
-    elif expression_coefficient == 1:
-        expression_base = no_operand_expression
+    elif expr_coefficient == 1:
+        expr_base = no_operand_expr
     else:
         len_coefficient = len(str(expression_coefficient))    
-        expression_base = no_operand_expression[len_coefficient:]
-    return expression_base   
+        expr_base = no_operand_expr[len_coefficient:]
+    return expr_base   
 
 
-def calculate_expression_operand_no_brackets (expression, expression_operand, pre_bracket_operand):
-    if ((pre_bracket_operand == '+' and expression_operand == '+')
-        or (pre_bracket_operand == '-' and expression_operand == '-')):
-        new_expression_operand = '+'
-    else:
-        new_expression_operand = '-' 
-    return new_expression_operand
+def calculate_open_brackets_expression(expression,pre_bracket_coef, pre_bracket_operand):
+    expr_operand, no_operand_expr = first_symbol_analyser(expression)
+    expr_coef = expression_coefficient_parser(no_operand_expr)
+    expr_base = extract_expression_base(no_operand_expr, expr_coef)
 
-    
-def calculate_open_brackets_expression(expression,pre_bracket_coefficient, pre_bracket_operand):
-    expression_operand, no_operand_expression = first_symbol_analyser(expression)
-    expression_coefficient = expression_coefficient_parser(no_operand_expression)
-    expression_base = extract_expression_base(no_operand_expression, expression_coefficient)
-
-    new_expression_coefficient = str(pre_bracket_coefficient * expression_coefficient)
-    new_expression_operand = calculate_expression_operand_no_brackets(expression,expression_operand,pre_bracket_operand)
-    new_expression = new_expression_operand + new_expression_coefficient + expression_base
-    return new_expression
+    new_expr_coef = str(pre_bracket_coef * expr_coef)
+    new_expr_operand = '+' if (pre_bracket_operand == expr_operand) else '-'
+    new_expr = new_expr_operand + new_expr_coef + expr_base
+    return new_expr
 
 def open_brackets_expression(expression): 
-    pre_bracket_operand, no_operand_expression = extract_pre_bracket_operand(expression)
-    pre_bracket_coefficient = extract_pre_bracket_coefficient(no_operand_expression)
+    pre_bracket_operand, no_operand_expr = extract_pre_bracket_operand(expression)
+    pre_bracket_coef = extract_pre_bracket_coefficient(no_operand_expr)
     polynomial_in_brackets = extract_expression_in_brackets (expression)
     parsed_polynomial_in_brackets = parse_polynomial(polynomial_in_brackets)
    
     new_polynomial = ''
     for expression in parsed_polynomial_in_brackets:
-        new_expression = calculate_open_brackets_expression(expression, pre_bracket_coefficient,pre_bracket_operand)
+        new_expression = calculate_open_brackets_expression(expression, pre_bracket_coef,pre_bracket_operand)
         new_polynomial +=new_expression
     return new_polynomial
 
@@ -128,6 +119,6 @@ def parse_polynomial_for_differentiation(input_string):
  
 
 # if __name__ =="__main__":         
-#     input_string ='-6x^2+11-7(x+2)'
+#     input_string ='-6x^2+11+7(x-3)'
 #     print(input_string)
 #     print(polynomial_to_differentiate(input_string))
