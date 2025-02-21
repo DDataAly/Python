@@ -27,19 +27,19 @@ def monomial_differentiator(monomial):
     
 
 def calculate_monomial_derivative(monomial, monomial_operand):
-    coefficient = polynomial_parser.expression_coefficient_parser(monomial)
+    coef = polynomial_parser.expression_coefficient_parser(monomial)
     base = differentiation_base_parser(monomial)
     exponent = differentiation_exponent_parser(monomial)
 
     if exponent == 1:
-        return(monomial_operand+str(coefficient))
+        return(monomial_operand+str(coef))
 
-    derivative_coefficient=str(coefficient * exponent)
+    derivative_coef=str(coef * exponent)
     if exponent == 2:
-        return(monomial_operand + derivative_coefficient + base)
+        return(monomial_operand + derivative_coef + base)
 
-    derivative_exponent = str(exponent-1)
-    return(monomial_operand + derivative_coefficient + base + '^' + derivative_exponent)      
+    derivative_exp = str(exponent-1)
+    return(monomial_operand + derivative_coef + base + '^' + derivative_exp)      
 
 
 def differentiate_polynomial(input_string):
