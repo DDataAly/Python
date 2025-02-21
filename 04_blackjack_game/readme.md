@@ -1,5 +1,5 @@
 
-Please check current_version folder to see latest updates.<br/>
+Please check new_structure folder to see latest updates.<br/>
 <br/>
 Next step:<br/>
 add doubling down and surrender options.<br/>
