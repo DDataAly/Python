@@ -62,12 +62,10 @@ def extract_expression_in_brackets(expression):
 
 
 def extract_expression_base(no_operand_expr, expr_coefficient):
-    if no_operand_expr.isdigit():
-        return('')
-    elif expr_coefficient == 1:
+    if expr_coefficient == 1 and not no_operand_expr.startswith('1'):
         expr_base = no_operand_expr
     else:
-        len_coefficient = len(str(expression_coefficient))    
+        len_coefficient = len(str(expr_coefficient))    
         expr_base = no_operand_expr[len_coefficient:]
     return expr_base   
 
@@ -82,6 +80,7 @@ def calculate_open_brackets_expression(expression,pre_bracket_coef, pre_bracket_
     new_expr = new_expr_operand + new_expr_coef + expr_base
     return new_expr
 
+
 def open_brackets_expression(expression): 
     pre_bracket_operand, no_operand_expr = extract_pre_bracket_operand(expression)
     pre_bracket_coef = extract_pre_bracket_coefficient(no_operand_expr)
@@ -93,6 +92,7 @@ def open_brackets_expression(expression):
         new_expression = calculate_open_brackets_expression(expression, pre_bracket_coef,pre_bracket_operand)
         new_polynomial +=new_expression
     return new_polynomial
+
 
 def open_brackets_polynomial(input_string):
     polynomial_open_brackets = ''
@@ -118,7 +118,8 @@ def parse_polynomial_for_differentiation(input_string):
     return(parsed_polynomial)
  
 
-# if __name__ =="__main__":         
-#     input_string ='-6x^2+11+7(x-3)'
-#     print(input_string)
-#     print(polynomial_to_differentiate(input_string))
+if __name__ =="__main__":         
+    input_string ='-7(1x)'
+    print(input_string)
+    print(polynomial_to_differentiate(input_string))
+
