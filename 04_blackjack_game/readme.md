@@ -3,6 +3,7 @@ Please check current_version folder to see latest updates.<br/>
 <br/>
 Next step:<br/>
 add doubling down and surrender options.<br/>
+<br/>
 The program imitating a popular casino card game Blackjack.<br/>
 The game is played between a dealer and one or multiple players.<br/>
 The game objective is to get the sum of your cards as close to 21 as possible without going over this number.<br/>
