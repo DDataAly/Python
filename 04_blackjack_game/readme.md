@@ -1,5 +1,4 @@
 
---Work in progress--
 Please check current_version folder to see latest updates.
 Next step:
 add doubling down and surrender options.
