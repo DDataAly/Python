@@ -1,1 +1,1 @@
-Depositary for all things Python. 
+Depositary for all things Python 
