@@ -2,7 +2,7 @@
 Please check new_structure folder to see the latest version.<br/>
 <br/>
 Next step:<br/>
-add doubling down and surrender options.<br/>
+add doubling down and surrender options <br/>
 <br/>
 The program imitating a popular casino card game Blackjack.<br/>
 The game is played between a dealer and one or multiple players.<br/>
