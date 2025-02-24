@@ -97,7 +97,7 @@ class Game:
                 
             elif player_hand_sum == dealer_hand_sum:
                 print(f'The dealer and the {player.id} has the same points ({player_hand_sum}),'
-                      'so {player.id} keeps his bet ')   
+                      f'so {player.id} keeps his bet ')   
                 
             else:
                 print(f'{player.id} has fewer points ({player_hand_sum}) than the dealer ({dealer_hand_sum}).'
