@@ -93,7 +93,7 @@ class Game:
             
             elif player_hand_sum > dealer_hand_sum:
                 print(f'{player.id} has more points ({player_hand_sum}) than the dealer({dealer_hand_sum}).'
-                      '{player.id} won the game and is paid 1:1 of his bet')
+                      f'{player.id} won the game and is paid 1:1 of his bet')
                 
             elif player_hand_sum == dealer_hand_sum:
                 print(f'The dealer and the {player.id} has the same points ({player_hand_sum}),'
@@ -101,7 +101,7 @@ class Game:
                 
             else:
                 print(f'{player.id} has fewer points ({player_hand_sum}) than the dealer ({dealer_hand_sum}).'
-                    '{player.id} lost the game and his bet')
+                     f'{player.id} lost the game and his bet')
              
 
 def game_start():
