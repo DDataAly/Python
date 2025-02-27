@@ -1,5 +1,5 @@
 
-Please check current_version folder to see the latest version.<br/>
+Please check current_version folder to see the latest version of the project.<br/>
 <br/>
 Next step:<br/>
 add doubling down and surrender options <br/>
