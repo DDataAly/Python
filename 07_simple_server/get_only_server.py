@@ -64,9 +64,4 @@ class MyHandler(BaseHTTPRequestHandler):
 # This block of code runs a server on port 400 of the localhost
 # With block makes sure that server stops running on when we close the program
 with HTTPServer(('127.0.0.1', 4000), MyHandler) as server:
-    server.serve_forever()     
-
-
-
-
-
+    server.serve_forever()   
