@@ -22,6 +22,7 @@ class MyHandler(BaseHTTPRequestHandler):
         url_query_dict=parse_qs(parsed_url.query)
 
         # This block of code handles set requests (adds new key-value pairs to the storage)
+        # Required format of set request is http://localhost:4000/set?somekey=somevalue
         # Using next(iter) to access the first (and only) key-pair in the dictionary since dictionary.items() returns a view object
         if self.path.startswith('/set'):
             new_storage_item = {k:v[0] for k,v in url_query_dict.items()}
@@ -39,15 +40,20 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
         # This block of code handles get requests (retrieves the requested value from the storage)
+        # Required format of get request http://localhost:4000/get?key=somekey
         elif self.path.startswith('/get'):
             # Using dictionary.get method to access the value of the key Or return None if value doesn't exist or the word 'key' is missing
-            item_to_fetch_key = url_query_dict.get('key', None)[0]
-            if item_to_fetch_key != None:
-                item_to_fetch_value = self.storage[item_to_fetch_key] 
-                return_object = item_to_fetch_value                          
+            item_to_fetch_key = url_query_dict.get('key', None)
+            if item_to_fetch_key == None:
+                return_object = 'The request doesn\'t contain the "key" word'
             else:
-                return_object = f'The key is not in the storage or the request doesn\'t contain the "key" word'
-
+                try: 
+                    item_to_fetch_key = url_query_dict.get('key')[0]   
+                    item_to_fetch_value = self.storage[item_to_fetch_key] 
+                    return_object = item_to_fetch_value    
+                except KeyError:
+                    return_object = 'The key is not in the storage'
+  
         else:
             return_object = f'Server can\'t process this request'
         
