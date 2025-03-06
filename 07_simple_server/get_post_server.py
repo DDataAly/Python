@@ -54,36 +54,52 @@ class MyHandler(BaseHTTPRequestHandler):
    
     # This block of code handles get requests (retrieves the requested value from the storage)
     # Required format of get request http://localhost:4000/get?key=somekey
-    # Using dictionary.get method to access the value of the key Or return None if value doesn't exist or the word 'key' is missing
+    
     def do_GET(self): 
 
-        if self.path.startswith('/get'):
-            url_query_dict = self.url_path_parser()    
-            item_to_fetch_key = url_query_dict.get('key', None)
-            if item_to_fetch_key == None:
-                return_object = 'The request doesn\'t contain the "key" word\n'
+        try:
+            # Using dictionary.get method to access the value of the key Or return None if value doesn't exist or the word 'key' is missing
+            if self.path.startswith('/get'):
+                url_query_dict = self.url_path_parser()    
+                item_to_fetch_key = url_query_dict.get('key', None)
+                if item_to_fetch_key == None:
+                    return_object = 'The request doesn\'t contain the "key" word\n'
+                else:
+                    try: 
+                        item_to_fetch_key = url_query_dict.get('key')[0]   
+                        item_to_fetch_value = self.storage[item_to_fetch_key] 
+                        return_object = f'{item_to_fetch_value}\n'    
+                    except KeyError:
+                        return_object = 'The key is not in the storage\n'
+                self.send_response_message(return_object) 
+
+            # Creating a way to terminate the program - handling the shutdown request
+            elif self.path.startswith('/shutdown'):
+                self.send_response_message('Server shutting down\n')  
+                raise KeyboardInterrupt
+
             else:
-                try: 
-                    item_to_fetch_key = url_query_dict.get('key')[0]   
-                    item_to_fetch_value = self.storage[item_to_fetch_key] 
-                    return_object = f'{item_to_fetch_value}\n'    
-                except KeyError:
-                    return_object = 'The key is not in the storage\n'
-            
-            self.send_response_message(return_object) 
+                self.send_response_message('Invalid GET request\n')   
 
-        # elif self.path.startswith('/shutdown'):
-        #     self.send_response_message('Server shutting down\n')  
+        # Handling the cases where the client request is not valid for a reason different from unrecognisable path       
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(f'Internal server error {str(e)}\n'.encode())
 
 
-        else:
-            self.send_response_message('Invalid POST request\n')   
 
 
 # This block of code runs a server on port 400 of the localhost
 # With block makes sure that server stops running on when we close the program
+# Providing clear instructions what to do in case of KeyboardInterrupt allows to complete all running processes before shutting down
 with HTTPServer(('127.0.0.1', 4000), MyHandler) as server:
-    server.serve_forever()     
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        server.shutdown()
+
 
 
 
